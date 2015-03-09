@@ -1,0 +1,10 @@
+/node_modules/
+/dist/
+/build/
+
+# OS X
+.DS_Store
+
+# IntelliJ stuff
+/.idea/
+*.iml

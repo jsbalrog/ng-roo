@@ -1,0 +1,29 @@
+{
+  "name": "ng-pouch",
+  "version": "0.1.0",
+  "description": "An offline storage module for AngularJS, PouchDB and CouchDB",
+  "main": "dist/angular.translate.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jsbalrog/ng-pouch"
+  },
+  "contributors": [
+    {
+      "name": "Ted Jenkins"
+    },
+    {
+      "name": "Andre Kradolfer"
+    }
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-concat": "^0.5.1",
+    "grunt-contrib-copy": "^0.8.0",
+    "grunt-contrib-uglify": "^0.8.0",
+    "grunt-conventional-changelog": "^1.1.0",
+    "grunt-ng-annotate": "^0.10.0",
+    "grunt-version": "^0.3.1",
+    "load-grunt-tasks": "^3.1.0"
+  }
+}
