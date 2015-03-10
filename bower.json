@@ -1,0 +1,26 @@
+{
+  "name": "ng-roo",
+  "description": "An offline storage module for AngularJS, PouchDB and CouchDB",
+  "version": "0.1.0",
+  "homepage": "http://github.com/jsbalrog/ng-roo",
+  "ignore": [],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jsbalrog/ng-roo"
+  },
+  "main": "./dist/ng-pouch.js",
+  "devDependencies": {
+    "angular": "~1.2.19",
+    "moment": "~2.9.0"
+  },
+  "resolutions": {
+    "angular": "~1.2.19",
+    "moment": "~2.9.0"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://www.opensource.org/licenses/MIT"
+    }
+  ]
+}

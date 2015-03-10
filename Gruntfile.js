@@ -5,6 +5,8 @@ module.exports = function (grunt) {
   require('load-grunt-tasks')(grunt);
 
   grunt.initConfig({
+    pkg: grunt.file.readJSON('bower.json'),
+
     language: grunt.option('lang') || 'en',
 
     meta: {
@@ -20,8 +22,23 @@ module.exports = function (grunt) {
     lib_files: {
 
       core: [
-        'src/PouchDB.js'
+        'src/roo.js'
       ]
+    },
+
+    jshint: {
+      options: {
+        eqeqeq: true,
+        newcap: false,
+        globals: {
+          angular: true
+        }
+      },
+      core: {
+        files: {
+          src: ['<%= lib_files.core %>']
+        }
+      }
     },
 
     concat: {
@@ -47,11 +64,11 @@ module.exports = function (grunt) {
       },
       core: {
         files: {
-          '<%= build_dir %>/ng-pouch.min.js': '<%= concat.core.dest %>'
+          '<%= build_dir %>/ng-roo.min.js': '<%= concat.core.dest %>'
         }
       }
     },
-    
+
     version: {
       options: {
         prefix: 'var version\\s+=\\s+[\'"]'
@@ -71,6 +88,7 @@ module.exports = function (grunt) {
   ]);
 
   grunt.registerTask('build:core', [
+    'jshint:core',
     'concat:core',
     'version',
     'ngAnnotate:core',

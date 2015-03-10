@@ -1,10 +1,10 @@
-angular.module('vs.ng-pouch', ['ng']);
+angular.module('vs.ng-roo', ['ng']);
 
-angular.module('vs.ng-pouch').provider('pouchConfig', function() {
+angular.module('vs.ng-roo').provider('rooConfig', function() {
   var self = this;
 
-  self.$dwnDbs;
-  self.$upDbs;
+  self.$dwnDbs = null;
+  self.$upDbs = null;
 
   this.$get = function() {
     return {
@@ -17,7 +17,7 @@ angular.module('vs.ng-pouch').provider('pouchConfig', function() {
       getCouchConfig: function() {
         return self.$couchConfig;
       }
-    }
+    };
   };
 
   self.dbs = function(dwnDbs, upDbs) {
@@ -38,7 +38,7 @@ angular.module('vs.ng-pouch').provider('pouchConfig', function() {
 
 });
 
-angular.module('vs.ng-pouch').service('Pouch', function ($q, pouchConfig) {
+angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig) {
   'use strict';
 
   function getDB(name) {
@@ -59,7 +59,7 @@ angular.module('vs.ng-pouch').service('Pouch', function ($q, pouchConfig) {
     var deferred = $q.defer();
     var promises = [];
     var retVal = [];
-    var jorgeNames = pouchConfig.getUpDbs();
+    var jorgeNames = rooConfig.getUpDbs();
     // Loop through all of the write databases
     _.each(jorgeNames, function (jorgeName) {
       // Get all the documents in the current write db
@@ -78,9 +78,9 @@ angular.module('vs.ng-pouch').service('Pouch', function ($q, pouchConfig) {
                 var split = change_id.split("::");
                 var dbName = split[0];
                 var id = split[1];
-                if (dbName == downDbName) {
+                if (dbName === downDbName) {
                   // Find if any document matches
-                  if(doc.id == id) {
+                  if(doc.id === id) {
                     _.extend(doc.doc, JSON.parse(row.doc.change));
                   }
                 }
