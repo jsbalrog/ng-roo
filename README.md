@@ -19,7 +19,8 @@ angular.module('MyOfflineApp', ['vs.ng-roo'])
 
 ng-roo operates by having read-only source databases and write-only sink
 databases. To configure databases, we have to make rooConfigProvider aware of
-our source databases ("down databases") as well as our sink databases ("up databases").
+our CouchDB instance url, and our source databases ("down databases") as well as
+our sink databases ("up databases").
 
 ```
 angular.module('MyOfflineApp', ['vs.ng-roo'])
