@@ -42,7 +42,7 @@ pass the already-created database back. You can then call api methods on the
 database. ng-roo uses IndexedDB under the covers.
 
 ```
-angular.module*('MyOfflineApp').service('MyService', function(Pouch) {
+angular.module('MyOfflineApp').service('MyService', function(Pouch) {
   function getDocs() {
 		var myDb = new Pouch('myReadOnlyDb1');
 		myDb.getAll().then(function(docs) {

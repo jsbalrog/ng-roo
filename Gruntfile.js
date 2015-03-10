@@ -22,7 +22,8 @@ module.exports = function (grunt) {
     lib_files: {
 
       core: [
-        'src/roo.js'
+        'src/roo.js',
+        'src/service/Pouch.js'
       ]
     },
 
@@ -44,7 +45,7 @@ module.exports = function (grunt) {
     concat: {
       core: {
         src: ['<%= lib_files.core %>'],
-        dest: '<%= build_dir %>/ng-pouch.js'
+        dest: '<%= build_dir %>/ng-roo.js'
       }
     },
 
