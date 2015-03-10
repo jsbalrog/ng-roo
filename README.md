@@ -44,10 +44,10 @@ angular.module*('MyOfflineApp').service('MyService', function(Pouch) {
 });
 ```
 
-Under the covers, ng-pouch syncs data outstanding in the write db(s) with the
+Under the covers, ng-roo syncs data outstanding in the write db(s) with the
 retrieved docs in the read dbs to present a consistent data model to the user.
 You would most likely use this in conjunction with your own sync service that
-would call ng-pouch's sync finished hooks to remove records from the write
+would call ng-roo's sync finished hooks to remove records from the write
 database(s).
 
 ## Todos
