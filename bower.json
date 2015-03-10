@@ -11,11 +11,13 @@
   "main": "./dist/ng-pouch.js",
   "devDependencies": {
     "angular": "~1.2.19",
-    "moment": "~2.9.0"
+    "moment": "~2.9.0",
+    "pouchdb": "~3.3.0"
   },
   "resolutions": {
     "angular": "~1.2.19",
-    "moment": "~2.9.0"
+    "moment": "~2.9.0",
+    "pouchdb": "~3.3.0"
   },
   "licenses": [
     {

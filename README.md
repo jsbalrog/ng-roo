@@ -4,6 +4,7 @@ ng-roo is an offline storage strategy for angular apps, leveraging PouchDB
 source of truth.
 
 ## Prerequisites
+* PouchDB
 * moment.js
 
 ## Usage
@@ -23,9 +24,15 @@ our source databases ("down databases") as well as our sink databases ("up datab
 ```
 angular.module('MyOfflineApp', ['vs.ng-roo'])
   .config(function(rooConfigProvider) {
+		rooConfigProvider.couchConfig({ 'couchUrl': 'http://0.0.0.0:5984' });
 	  rooConfigProvider.dbs(['myReadOnlyDb1', 'myReadOnlyDb2'], ['myWriteDb']);
   });
 ```
+
+You will, of course, want to create CouchDB databases for each database you
+pass to `rooConfigProvider.dbs`, and have your CouchDB instance running,
+otherwise you will get errors. See the PouchDB documentation for information
+on Pouch/Couch syncing.
 
 To use the offline storage ng-roo provides, simply inject the `Pouch` object,
 and create a new instance of a database, passing the name of the database as a

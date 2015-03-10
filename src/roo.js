@@ -133,7 +133,7 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig) {
 
     this.syncDB = function syncDB(name, user, opts) {
       var deferred = $q.defer();
-      var remote = new PouchDB('http://0.0.0.0:5984' + name);
+      var remote = new PouchDB(rooConfig.getCouchConfig.couchUrl + name);
       //var remote = new PouchDB(couchConfig.host + name);
       var local = new PouchDB(name);
       console.log('syncing', name);
