@@ -36,7 +36,7 @@ database. ng-roo uses IndexedDB under the covers.
 ```
 angular.module*('MyOfflineApp').service('MyService', function(Pouch) {
   function getDocs() {
-		var myDb = new Roo('myReadOnlyDb1');
+		var myDb = new Pouch('myReadOnlyDb1');
 		myDb.getAll().then(function(docs) {
 		  doSomethingWithDocs(docs);
 		});
