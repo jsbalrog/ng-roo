@@ -72,8 +72,11 @@ Next, call `putEntry()` passing the following parameters:
 * change (an arbitrary json object consisting of whatever you want recorded)
 * HTTP method (string)
 * URL (string)
-* success callback (function)
-* error callback (function)
+* Data (string) -- for an HTTP POST, the data in the request body
+* Headers (string) -- any header information needed to be processed by the server
+* User (json object) -- any user information needed for authorization/authentication.
+* Success callback (function)
+* Error callback (function)
 
 ng-roo writes the record to the database. Note that whatever syncing process
 you employ with your server will then have the information to take this record
@@ -81,6 +84,7 @@ and process it with its HTTP method and url endpoint.
 
 ## Todos
 * Bowerify
+* API documentation
 
 ## License
 Licensed under MIT.
