@@ -17,6 +17,7 @@ angular.module('MyOfflineApp', ['vs.ng-roo'])
   });
 ```
 
+### Sinks and Sources
 ng-roo operates by having read-only source databases and write-only sink
 databases. To configure databases, we have to make rooConfigProvider aware of
 our CouchDB instance url, and our source databases ("down databases") as well as
@@ -57,6 +58,26 @@ retrieved docs in the read dbs to present a consistent data model to the user.
 You would most likely use this in conjunction with your own sync service that
 would call ng-roo's sync finished hooks to remove records from the write
 database(s).
+
+To write to an ng-roo sink/up database, you create an instance of the database
+similar to above:
+
+```
+var myJournalDb = new Pouch('myWriteDb');
+```
+
+Next, call `putEntry()` passing the following parameters:
+* readOnlyDbName (string)
+* record id (string)
+* change (an arbitrary json object consisting of whatever you want recorded)
+* HTTP method (string)
+* URL (string)
+* success callback (function)
+* error callback (function)
+
+ng-roo writes the record to the database. Note that whatever syncing process
+you employ with your server will then have the information to take this record
+and process it with its HTTP method and url endpoint.
 
 ## Todos
 * Bowerify
