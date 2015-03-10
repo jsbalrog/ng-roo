@@ -24,7 +24,7 @@ our source databases ("down databases") as well as our sink databases ("up datab
 ```
 angular.module('MyOfflineApp', ['vs.ng-roo'])
   .config(function(rooConfigProvider) {
-		rooConfigProvider.couchConfig({ 'couchUrl': 'http://0.0.0.0:5984' });
+	  rooConfigProvider.couchConfig({ 'couchUrl': 'http://0.0.0.0:5984' });
 	  rooConfigProvider.dbs(['myReadOnlyDb1', 'myReadOnlyDb2'], ['myWriteDb']);
   });
 ```
