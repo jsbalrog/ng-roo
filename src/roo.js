@@ -1,8 +1,8 @@
 angular.module('vs.ng-roo', ['ng']).provider('rooConfig', function() {
   var self = this;
 
-  self.$dwnDbs = null;
-  self.$upDbs = null;
+  self.$dwnDbs = [];
+  self.$upDbs = [];
 
   this.$get = function() {
     return {
