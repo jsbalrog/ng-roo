@@ -23,6 +23,7 @@ module.exports = function (grunt) {
 
       core: [
         'src/roo.js',
+        'src/service/LocalStorage.js',
         'src/service/Pouch.js'
       ]
     },

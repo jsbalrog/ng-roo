@@ -1,4 +1,4 @@
-angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig) {
+angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig, LocalStorageService) {
   'use strict';
 
   function getDB(name) {
@@ -100,8 +100,15 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig) {
       local.replicate.from(remote, {
         filter: opts.filter,
         query_params: opts.getParams(user)
-      }).on('complete', function () {
-        deferred.resolve();
+      }).on('complete', function (result) {
+        try {
+          // Make an entry in the logs
+          LocalStorageService.addEntryToLog(user.employeeID, name, result);
+          deferred.resolve();
+        } catch(error) {
+          console.log(error);
+          deferred.reject(error);
+        }
         return deferred.promise;
       });
     };
@@ -125,8 +132,20 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig) {
     this.sendJorgeDB = function sendJorgeDB(db, user) {
       console.log('syncing ' + db + ' for user ' + user.displayName);
       var deferred = $q.defer();
+      var promises = [];
       // Do some stuff here.
-      deferred.resolve();
+      getDB(db).allDocs({
+        include_docs: true
+      }).then(function (docs) {
+        // Make an entry in the logs
+        _.forEach(docs.rows, function(row) {
+          promises.push(LocalStorageService.addEntryToLog(user.employeeID, db, row));
+        });
+
+        $q.all(promises).then(function(result) {
+          deferred.resolve(result);
+        });
+      });
       return deferred.promise;
     };
   };
