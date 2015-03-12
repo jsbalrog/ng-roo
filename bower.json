@@ -12,12 +12,14 @@
   "devDependencies": {
     "angular": "~1.2.19",
     "moment": "~2.9.0",
-    "pouchdb": "~3.3.0"
+    "pouchdb": "~3.3.0",
+    "lodash": "~2.4.1"
   },
   "resolutions": {
     "angular": "~1.2.19",
     "moment": "~2.9.0",
-    "pouchdb": "~3.3.0"
+    "pouchdb": "~3.3.0",
+    "lodash": "~2.4.1"
   },
   "licenses": [
     {

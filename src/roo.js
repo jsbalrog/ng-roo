@@ -1,4 +1,6 @@
 angular.module('vs.ng-roo', ['ng']).provider('rooConfig', function() {
+  'use strict';
+  
   var self = this;
 
   self.$dwnDbs = [];

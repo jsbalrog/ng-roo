@@ -6,6 +6,7 @@ source of truth.
 ## Prerequisites
 * PouchDB
 * moment.js
+* lodash.js
 
 ## Usage
 To use ng-roo, simply include it in your app's list of dependencies.
