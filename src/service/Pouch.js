@@ -101,7 +101,7 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig) {
         filter: opts.filter,
         query_params: opts.getParams(user)
       }).on('complete', function () {
-        defer.resolve();
+        deferred.resolve();
         return deferred.promise;
       });
     };
