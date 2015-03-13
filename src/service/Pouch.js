@@ -1,3 +1,4 @@
+/*global window: false */
 angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig, LocalStorageService) {
   'use strict';
 
@@ -57,6 +58,49 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig, LocalStora
     return deferred.promise;
   }
 
+  /**
+   * Function to update a given read-only record
+   * from the server with whatever changes have been
+   * made on the client but have not yet been synced
+   * to the server, for ui display purposes. This
+   * is called currently from the MasterCtrl, so
+   * basically on app load. change_id is dbname::id;
+   * so, for example, looks something like this:
+   *"gemini_cushion_fist::WO-20150226-2949689"
+   */
+  function shimRecord(downDbName, downDoc) {
+    var deferred = $q.defer();
+    var jorgeNames = rooConfig.getUpDbs();
+    // Loop through all of the write databases
+    _.each(jorgeNames, function (jorgeName) {
+      // Get all the documents in the current write db
+      getDB(jorgeName).allDocs({
+        include_docs: true
+      }).then(function (jorgeDocs) {
+          if (jorgeDocs.total_rows > 0) {
+            // The the current write db has any documents, loop through
+            // them and see if any of the documents have a change_id that
+            // matches the current read-only db
+            _.each(jorgeDocs.rows, function (row) {
+              var change_id = row.doc.change_id;
+              var split = change_id.split('::');
+              var dbName = split[0];
+              var id = split[1];
+              if (dbName === downDbName) {
+                // Find if any document matches
+                if(downDoc._id === id) {
+                  _.extend(downDoc, JSON.parse(row.doc.change));
+                }
+              }
+            });
+          }
+          deferred.resolve(downDoc);
+        });
+    });
+
+    return deferred.promise;
+  }
+
   return function (db) {
 
     this.db = db;
@@ -70,6 +114,31 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig, LocalStora
         return shimRecords(self.db, docs);
       }).then(function (docs) {
         deferred.resolve(_.pluck(docs.rows, 'doc'));
+      });
+      return deferred.promise;
+    };
+
+    this.get = function (docId) {
+      var self = this;
+      var deferred = $q.defer();
+      getDB(self.db).get(docId, {
+        include_docs: true
+      }).then(function (doc) {
+        return shimRecord(self.db, doc);
+      }).then(function (doc) {
+        deferred.resolve(doc);
+      });
+      return deferred.promise;
+    };
+
+    this.getAttachment = function (docId, attrId) {
+      var self = this;
+      var deferred = $q.defer();
+      var URL = window.URL;
+      getDB(self.db).getAttachment(docId, attrId)
+      .then(function (blob) {
+        var url = URL.createObjectURL(blob);
+        deferred.resolve(url);
       });
       return deferred.promise;
     };
