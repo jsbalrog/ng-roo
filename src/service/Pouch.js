@@ -131,6 +131,12 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig, LocalStora
       return deferred.promise;
     };
 
+
+    /**
+     * Retrieve attachment's local url
+     * @param {string} docId - Document's id were the attachment exists.
+     * @param {string} attrId - The id for the attachment itself.
+     */
     this.getAttachment = function (docId, attrId) {
       var self = this;
       var deferred = $q.defer();
@@ -159,16 +165,31 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig, LocalStora
       getDB(self.db).put(entry).then(successCb, errorCb);
     };
 
-    this.syncDB = function syncDB(name, user, opts) {
+    /**
+     * Sync db with predefined CouchDB
+     * @param {object} user - Any User object to be passed into getParams.
+     * @param {object} options - functions to determine params and filters.
+     */
+    this.syncDB = function syncDB(user, opts) {
       var deferred = $q.defer();
-      var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + '/' + name);
-      //var remote = new PouchDB(couchConfig.host + name);
-      var local = new PouchDB(name);
-      console.log('syncing', name);
-      local.replicate.from(remote, {
-        filter: opts.filter,
-        query_params: opts.getParams(user)
-      }).on('complete', function (result) {
+
+      // Initialize the remote and local databases
+      var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + '/' + self.db);
+      var local = getDB(self.db);
+      console.log('syncing', self.db);
+      var replicationOptions = {};
+
+      // Set replication options only if they were passed in
+      if(opts.filter){
+        replicationOptions.filter = opts.filter;
+      }
+      if(opts.getParams){
+        replicationOptions.query_params = opts.getParams(user)
+      }
+
+      // Perform replication
+      local.replicate.from(remote, replicationOptions)
+      .on('complete', function (result) {
         try {
           // Make an entry in the logs
           LocalStorageService.addEntryToLog(user.employeeID, name, result);
