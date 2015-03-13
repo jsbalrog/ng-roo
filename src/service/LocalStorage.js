@@ -1,6 +1,6 @@
 angular.module('vs.ng-roo').factory('LocalStorageService', function($window, $q) {
   'use strict';
-  
+
   var lsKey = 'ng-roo';
   var localStorage = $window.localStorage;
 
@@ -32,11 +32,22 @@ angular.module('vs.ng-roo').factory('LocalStorageService', function($window, $q)
       deferred = $q.defer();
     if (ns) {
       items = JSON.parse(localStorage[ns]);
-      deferred.resolve(items);
+      deferred.resolve({ key: ns, items: items });
     } else {
       deferred.reject('Sorry; HTML5 local storage not supported.');
     }
     return deferred.promise;
+  }
+
+  function clearLog(userId) {
+    var retVal = false,
+      ns = getLocalStorageNamespace(userId);
+    if(ns) {
+      localStorage.removeItem(ns);
+      retVal = true;
+    }
+
+    return retVal;
   }
 
   function getLocalStorageNamespace(userId) {
@@ -55,6 +66,7 @@ angular.module('vs.ng-roo').factory('LocalStorageService', function($window, $q)
 
   return {
     addEntryToLog: addEntryToLog,
-    getLog: getLog
+    getLog: getLog,
+    clearLog: clearLog
   };
 });
