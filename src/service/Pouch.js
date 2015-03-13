@@ -171,6 +171,7 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig, LocalStora
      * @param {object} options - functions to determine params and filters.
      */
     this.syncDB = function syncDB(user, opts) {
+      var self = this;
       var deferred = $q.defer();
 
       // Initialize the remote and local databases
@@ -184,7 +185,7 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig, LocalStora
         replicationOptions.filter = opts.filter;
       }
       if(opts.getParams){
-        replicationOptions.query_params = opts.getParams(user)
+        replicationOptions.query_params = opts.getParams(user);
       }
 
       // Perform replication
@@ -192,7 +193,7 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig, LocalStora
       .on('complete', function (result) {
         try {
           // Make an entry in the logs
-          LocalStorageService.addEntryToLog(user.employeeID, name, result);
+          LocalStorageService.addEntryToLog(user.employeeID, self.db, result);
           deferred.resolve();
         } catch(error) {
           console.log(error);

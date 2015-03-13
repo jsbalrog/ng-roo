@@ -5,7 +5,7 @@ angular.module('vs.ng-roo', ['ng']).provider('rooConfig', function() {
 
   self.$options = {
     auto_compaction: true 
-  }
+  };
 
   self.$dwnDbs = [];
   self.$upDbs = [];
@@ -47,6 +47,6 @@ angular.module('vs.ng-roo', ['ng']).provider('rooConfig', function() {
     if(options){
       self.$options = _.extend(self.$options, options);
     }
-  }
+  };
 
 });
