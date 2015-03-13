@@ -3,7 +3,7 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig, LocalStora
   'use strict';
 
   function getDB(name) {
-    return new PouchDB(name);
+    return new PouchDB(name, rooConfig.getOptions());
   }
 
   /**
