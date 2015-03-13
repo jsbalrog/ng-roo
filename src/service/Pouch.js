@@ -69,7 +69,7 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig, LocalStora
       }).then(function (docs) {
         return shimRecords(self.db, docs);
       }).then(function (docs) {
-        deferred.resolve(docs);
+        deferred.resolve(_.pluck(docs.rows, 'doc'));
       });
       return deferred.promise;
     };
