@@ -1,9 +1,8 @@
 {
   "node": true,
-  "es5": true,
   "esnext": false,
   "bitwise": true,
-  "camelcase": true,
+  "camelcase": false,
   "curly": true,
   "eqeqeq": true,
   "immed": true,
@@ -17,5 +16,6 @@
   "strict": true,
   "trailing": true,
   "smarttabs": true,
-  "newcap": false
+  "newcap": false,
+  "predef": ["angular", "_", "PouchDB", "moment"]
 }

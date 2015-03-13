@@ -18,7 +18,6 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig, LocalStora
   function shimRecords(downDbName, downDocs) {
     var deferred = $q.defer();
     var promises = [];
-    var retVal = [];
     var jorgeNames = rooConfig.getUpDbs();
     // Loop through all of the write databases
     _.each(jorgeNames, function (jorgeName) {
@@ -35,7 +34,7 @@ angular.module('vs.ng-roo').service('Pouch', function ($q, rooConfig, LocalStora
               _.each(jorgeDocs.rows, function (row) {
                 var d = $q.defer();
                 var change_id = row.doc.change_id;
-                var split = change_id.split("::");
+                var split = change_id.split('::');
                 var dbName = split[0];
                 var id = split[1];
                 if (dbName === downDbName) {

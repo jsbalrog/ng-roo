@@ -1,6 +1,7 @@
 var fs = require('fs');
 
 module.exports = function (grunt) {
+  'use strict';
 
   require('load-grunt-tasks')(grunt);
 
@@ -30,11 +31,25 @@ module.exports = function (grunt) {
 
     jshint: {
       options: {
+        node: true,
+        esnext: false,
+        bitwise: true,
+        camelcase: false,
+        curly: true,
         eqeqeq: true,
+        immed: true,
+        indent: 2,
+        latedef: false,
+        noarg: true,
+        quotmark: 'single',
+        regexp: true,
+        undef: true,
+        unused: true,
+        strict: true,
+        trailing: true,
+        smarttabs: true,
         newcap: false,
-        globals: {
-          angular: true
-        }
+        predef: ['angular', '_', 'PouchDB', 'moment']
       },
       core: {
         files: {
