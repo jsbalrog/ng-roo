@@ -12,7 +12,7 @@ angular.module('vs.ng-roo').factory('LocalStorageService', function($window, $q)
     ns = getLocalStorageNamespace(userId);
     if(ns) {
       newItem = {
-        db: db,
+        db: '' + db,
         timestamp: new Date(),
         data: data
       };
