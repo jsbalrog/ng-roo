@@ -7,6 +7,10 @@ ngModule.provider('rooConfig', function() {
 
   var self = this;
 
+  self.$options = {
+    auto_compaction: true 
+  };
+
   self.$dwnDbs = [];
   self.$upDbs = [];
 
@@ -20,6 +24,9 @@ ngModule.provider('rooConfig', function() {
       },
       getCouchConfig: function() {
         return self.$couchConfig;
+      },
+      getOptions: function(){
+        return self.$options;
       }
     };
   };
@@ -37,6 +44,12 @@ ngModule.provider('rooConfig', function() {
   self.couchConfig = function(couchConfig) {
     if(couchConfig) {
       self.$couchConfig = couchConfig;
+    }
+  };
+
+  self.options = function(options){
+    if(options){
+      self.$options = _.extend(self.$options, options);
     }
   };
 
