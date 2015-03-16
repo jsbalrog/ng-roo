@@ -1,6 +1,10 @@
-angular.module('vs.ng-roo', ['ng']).provider('rooConfig', function() {
+var ngModule = angular.module('vs.ng-roo', ['ng']);
+
+require('./service')(ngModule);
+
+ngModule.provider('rooConfig', function() {
   'use strict';
-  
+
   var self = this;
 
   self.$options = {
