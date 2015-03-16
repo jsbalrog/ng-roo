@@ -98,40 +98,71 @@ module.exports = function(ngModule) {
             }
             deferred.resolve(downDoc);
           });
+        });
+      return deferred.promise;
+    }
+
+  return function (db) {
+
+    this.db = db;
+
+    this.getAll = function (options) {
+      var self = this;
+      var deferred = $q.defer();
+
+      var options = _.extend({include_docs: true}, options);
+
+      getDB(self.db)
+      .allDocs(option)
+      .then(function (docs) {
+        return shimRecords(self.db, docs);
+      }).then(function (docs) {
+        deferred.resolve(_.pluck(docs.rows, 'doc'));
       });
 
       return deferred.promise;
     }
 
-    return function (db) {
+    this.query = function(query, options){
+      var self = this;
+      var deferred = $q.defer();
 
-      this.db = db;
+      var options = options || {};
 
-      this.getAll = function () {
-        var self = this;
-        var deferred = $q.defer();
-        getDB(self.db).allDocs({
-          include_docs: true
-        }).then(function (docs) {
-          return shimRecords(self.db, docs);
-        }).then(function (docs) {
-          deferred.resolve(_.pluck(docs.rows, 'doc'));
-        });
-        return deferred.promise;
-      };
+      getDB(self.db).query(query, options)
+      .then(function (doc) {
+        return shimRecord(self.db, doc);
+      }).then(function (doc) {
+        deferred.resolve(doc);
+      });
+      return deferred.promise;
+    }
 
-      this.get = function (docId) {
-        var self = this;
-        var deferred = $q.defer();
-        getDB(self.db).get(docId, {
-          include_docs: true
-        }).then(function (doc) {
-          return shimRecord(self.db, doc);
-        }).then(function (doc) {
-          deferred.resolve(doc);
-        });
-        return deferred.promise;
-      };
+    this.getAll = function () {
+      var self = this;
+      var deferred = $q.defer();
+      getDB(self.db).allDocs({
+        include_docs: true
+      }).then(function (docs) {
+        return shimRecords(self.db, docs);
+      }).then(function (docs) {
+        deferred.resolve(_.pluck(docs.rows, 'doc'));
+      });
+      return deferred.promise;
+    };
+
+    this.get = function (docId) {
+      var self = this;
+      var deferred = $q.defer();
+      getDB(self.db).get(docId, {
+        include_docs: true
+      }).then(function (doc) {
+        return shimRecord(self.db, doc);
+      }).then(function (doc) {
+        deferred.resolve(doc);
+      });
+      return deferred.promise;
+    };
 
 
       /**
