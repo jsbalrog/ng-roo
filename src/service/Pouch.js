@@ -5,7 +5,7 @@ module.exports = function(ngModule) {
   ngModule.service('Pouch', function ($q, rooConfig, LocalStorageService) {
 
     function getDB(name) {
-      return new PouchDB(name, rooConfig.getOptions());
+      return new PouchDB(name, rooConfig.getDbOptions());
     }
 
     /**
@@ -209,6 +209,9 @@ module.exports = function(ngModule) {
 
         // Initialize the remote and local databases
         var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + '/' + self.db);
+        if(rooConfig.getOptions().destoryOnSync){
+          getDB(self.db).destory();
+        }
         var local = getDB(self.db);
         console.log('syncing', self.db);
         var replicationOptions = {};

@@ -8,6 +8,10 @@ ngModule.provider('rooConfig', function() {
   var self = this;
 
   self.$options = {
+    destoryOnSync: true
+  };
+
+  self.$dbOptions = {
     auto_compaction: true 
   };
 
@@ -27,6 +31,9 @@ ngModule.provider('rooConfig', function() {
       },
       getOptions: function(){
         return self.$options;
+      },
+      getDbOptions: function(){
+        return self.$dbOptions;
       }
     };
   };
@@ -50,6 +57,12 @@ ngModule.provider('rooConfig', function() {
   self.options = function(options){
     if(options){
       self.$options = _.extend(self.$options, options);
+    }
+  };
+
+  self.dbOptions = function(dbOptions){
+    if(options){
+      self.$dbOptions = _.extend(self.$dbOptions, dbOptions);
     }
   };
 
