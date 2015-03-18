@@ -110,10 +110,10 @@ module.exports = function(ngModule) {
       var self = this;
       var deferred = $q.defer();
 
-      var options = _.extend({include_docs: true}, options);
+      var o = _.extend({include_docs: true}, options);
 
       getDB(self.db)
-      .allDocs(option)
+      .allDocs(o)
       .then(function (docs) {
         return shimRecords(self.db, docs);
       }).then(function (docs) {
@@ -121,22 +121,22 @@ module.exports = function(ngModule) {
       });
 
       return deferred.promise;
-    }
+    };
 
     this.query = function(query, options){
       var self = this;
       var deferred = $q.defer();
 
-      var options = options || {};
+      var o = options || {};
 
-      getDB(self.db).query(query, options)
+      getDB(self.db).query(query, o)
       .then(function (doc) {
         return shimRecord(self.db, doc);
       }).then(function (doc) {
         deferred.resolve(doc);
       });
       return deferred.promise;
-    }
+    };
 
     this.getAll = function () {
       var self = this;
@@ -205,6 +205,7 @@ module.exports = function(ngModule) {
        */
       this.syncDB = function syncDB(user, opts) {
         var self = this;
+
         if(rooConfig.getOptions().destoryOnSync){
             console.log('removing table', self.db);
 	          getDB(self.db)
