@@ -205,39 +205,50 @@ module.exports = function(ngModule) {
        */
       this.syncDB = function syncDB(user, opts) {
         var self = this;
-        var deferred = $q.defer();
-
-        // Initialize the remote and local databases
-        var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + '/' + self.db);
         if(rooConfig.getOptions().destoryOnSync){
-          getDB(self.db).destory();
-        }
-        var local = getDB(self.db);
-        console.log('syncing', self.db);
-        var replicationOptions = {};
-
-        // Set replication options only if they were passed in
-        if(opts.filter){
-          replicationOptions.filter = opts.filter;
-        }
-        if(opts.getParams){
-          replicationOptions.query_params = opts.getParams(user);
-        }
-
-        // Perform replication
-        local.replicate.from(remote, replicationOptions)
-        .on('complete', function (result) {
-          try {
-            // Make an entry in the logs
-            LocalStorageService.addEntryToLog(user.employeeID, self.db, result);
-            deferred.resolve();
-          } catch(error) {
-            console.log(error);
-            deferred.reject(error);
+            console.log('removing table', self.db);
+	          getDB(self.db)
+              .destroy()
+              .then(function(){
+                self.performSync(user, opts);
+              });
+	        }else{
+            self.performSync(user, opts);
           }
-          return deferred.promise;
-        });
       };
+
+      this.performSync = function(user, opts){
+          var self = this;
+          var deferred = $q.defer();
+
+          // Initialize the remote and local databases
+          var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + '/' + self.db);
+          var local = getDB(self.db);
+          console.log('syncing', self.db);
+          var replicationOptions = {batch_size: 2};
+
+          // Set replication options only if they were passed in
+          if(opts.filter){
+            replicationOptions.filter = opts.filter;
+          }
+          if(opts.getParams){
+            replicationOptions.query_params = opts.getParams(user);
+          }
+
+          // Perform replication
+          local.replicate.from(remote, replicationOptions)
+            .on('complete', function (result) {
+              try {
+                // Make an entry in the logs
+                LocalStorageService.addEntryToLog(user.employeeID, self.db, result);
+                deferred.resolve();
+              } catch(error) {
+                console.log(error);
+                deferred.reject(error);
+              }
+              return deferred.promise;
+            });
+        };
 
       this.update = function update(db, obj, id) {
         var deferred = $q.defer();
