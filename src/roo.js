@@ -12,7 +12,7 @@ ngModule.provider('rooConfig', function() {
   };
 
   self.$dbOptions = {
-    auto_compaction: true 
+    auto_compaction: true
   };
 
   self.$dwnDbs = [];
@@ -60,9 +60,9 @@ ngModule.provider('rooConfig', function() {
     }
   };
 
-  self.dbOptions = function(dbOptions){
+  self.dbOptions = function(options){
     if(options){
-      self.$dbOptions = _.extend(self.$dbOptions, dbOptions);
+      self.$dbOptions = _.extend(self.$dbOptions, options);
     }
   };
 
