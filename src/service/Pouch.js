@@ -209,8 +209,8 @@ module.exports = function(ngModule) {
 
         // Initialize the remote and local databases
         var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + '/' + self.db);
-        if(rooConfig.getOptions().destoryOnSync){
-          getDB(self.db).destory();
+        if(rooConfig.getOptions().destroyOnSync){
+          getDB(self.db).destroy();
         }
         var local = getDB(self.db);
         console.log('syncing', self.db);

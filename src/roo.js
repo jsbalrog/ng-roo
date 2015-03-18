@@ -8,7 +8,7 @@ ngModule.provider('rooConfig', function() {
   var self = this;
 
   self.$options = {
-    destoryOnSync: true
+    destroyOnSync: true
   };
 
   self.$dbOptions = {
