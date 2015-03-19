@@ -199,11 +199,11 @@ module.exports = function(ngModule) {
       };
 
       /**
-       * Sync db with predefined CouchDB
+       * Replicate db with predefined CouchDB
        * @param {object} user - Any User object to be passed into getParams.
        * @param {object} options - functions to determine params and filters.
        */
-      this.syncDB = function syncDB(user, opts) {
+      this.replicateDB = function(user, opts) {
         var self = this;
 
         if(rooConfig.getOptions().destoryOnSync){
@@ -211,27 +211,23 @@ module.exports = function(ngModule) {
 	          getDB(self.db)
               .destroy()
               .then(function(){
-                self.performSync(user, opts);
+                self.performReplication(user, opts);
               });
 	        }else{
-            self.performSync(user, opts);
+            self.performReplication(user, opts);
           }
       };
 
-      this.performSync = function(user, opts){
+      this.performReplication = function(user, opts){
           var self = this;
           var deferred = $q.defer();
 
           // Initialize the remote and local databases
           var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + '/' + self.db);
           var local = getDB(self.db);
-          console.log('syncing', self.db);
-          var replicationOptions = {batch_size: 2};
+          console.log('Replicating', self.db);
+          var replicationOptions = _.extend({batch_size: 2}, opts);
 
-          // Set replication options only if they were passed in
-          if(opts.filter){
-            replicationOptions.filter = opts.filter;
-          }
           if(opts.getParams){
             replicationOptions.query_params = opts.getParams(user);
           }
@@ -251,7 +247,33 @@ module.exports = function(ngModule) {
             });
         };
 
-      this.update = function update(db, obj, id) {
+      this.performSync = function(user, opts){
+        var self = this;
+        var deferred = $q.defer();
+
+        console.log('Syncing', self.db);
+        var syncOptions = _.extend({batch_size: 2}, opts);
+
+        if(opts.getParams){
+          syncOptions.query_params = opts.getParams(user);
+        }
+
+        // Perform replication
+        PouchDB.sync(self.db, rooConfig.getCouchConfig().couchUrl + '/' + self.db, syncOptions)
+          .on('complete', function (result) {
+            try {
+              // Make an entry in the logs
+              LocalStorageService.addEntryToLog(user.employeeID, self.db, result);
+              deferred.resolve();
+            } catch(error) {
+              console.log(error);
+              deferred.reject(error);
+            }
+            return deferred.promise;
+          });
+      };
+
+      this.update = function(db, obj, id) {
         var deferred = $q.defer();
         var cushiondb = getDB(db);
         cushiondb.get(id).then(function success(doc) {
@@ -267,7 +289,7 @@ module.exports = function(ngModule) {
         return deferred.promise;
       };
 
-      this.sendJorgeDB = function sendJorgeDB(db, user) {
+      this.sendJorgeDB = function(db, user) {
         console.log('syncing ' + db + ' for user ' + user.displayName);
         var deferred = $q.defer();
         var promises = [];
@@ -287,5 +309,6 @@ module.exports = function(ngModule) {
         return deferred.promise;
       };
     };
+
   });
 };
