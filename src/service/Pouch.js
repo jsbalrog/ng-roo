@@ -4,8 +4,13 @@ module.exports = function(ngModule) {
 
   ngModule.service('Pouch', function ($q, rooConfig, LocalStorageService) {
 
+    var dbCache = {};
+
     function getDB(name) {
-      return new PouchDB(name, rooConfig.getDbOptions());
+      if(!dbCache[name]){
+        dbCache[name] = new PouchDB(name, rooConfig.getDbOptions())
+      }
+      return dbCache[name];
     }
 
     /**
@@ -182,20 +187,26 @@ module.exports = function(ngModule) {
         return deferred.promise;
       };
 
-      this.putEntry = function putEntry(table, id, obj, method, endpoint, data, headers, user, successCb, errorCb) {
+      this.putEntry = function(originTable, originId, changes, method, endpoint, data, headers, user, attachment) {
         var entry = {
             _id: new moment().unix().toString(),
-            change_id: '' + table + '::' + id,
-            change: JSON.stringify(obj),
+            change_id: '' + originTable + '::' + originId,
+            change: JSON.stringify(changes),
             method: method,
             endpoint: endpoint,
             data: data,
             headers: headers,
             user: user
           },
-          self = this;
+          self = this,
+          db = getDB(self.db);
 
-        getDB(self.db).put(entry).then(successCb, errorCb);
+        return db.put(entry)
+        .then(function(doc) {
+          if(attachment){
+            return db.putAttachment(entry._id, attachment.name, doc.rev, attachment, attachment.type)
+          }
+        });
       };
 
       /**
