@@ -8,7 +8,7 @@ module.exports = function(ngModule) {
 
     function getDB(name) {
       if(!dbCache[name]){
-        dbCache[name] = new PouchDB(name, rooConfig.getDbOptions())
+        dbCache[name] = new PouchDB(name, rooConfig.getDbOptions());
       }
       return dbCache[name];
     }
@@ -36,7 +36,7 @@ module.exports = function(ngModule) {
           .then(function (jorgeDocs) {
             if (jorgeDocs.total_rows > 0) {
               _.each(downDocs.rows, function(doc) {
-                // The the current write db has any documents, loop through
+                // If the current write db has any documents, loop through
                 // them and see if any of the documents have a change_id that
                 // matches the current read-only db
                 _.each(jorgeDocs.rows, function (row) {
@@ -73,7 +73,7 @@ module.exports = function(ngModule) {
      * is called currently from the MasterCtrl, so
      * basically on app load. change_id is dbname::id;
      * so, for example, looks something like this:
-     *"gemini_cushion_fist::WO-20150226-2949689"
+     * "gemini_cushion_fist::WO-20150226-2949689"
      */
     function shimRecord(downDbName, downDoc) {
       var deferred = $q.defer();
@@ -97,6 +97,11 @@ module.exports = function(ngModule) {
                   // Find if any document matches
                   if(downDoc._id === id) {
                     _.extend(downDoc, JSON.parse(row.doc.change));
+
+                    // Handle attachments
+                    if(row.doc._attachments) {
+                      _.extend(downDoc, JSON.parse(row.doc._attachments));
+                    }
                   }
                 }
               });
@@ -204,7 +209,7 @@ module.exports = function(ngModule) {
         return db.put(entry)
         .then(function(doc) {
           if(attachment){
-            return db.putAttachment(entry._id, attachment.name, doc.rev, attachment, attachment.type)
+            return db.putAttachment(entry._id, attachment.name, doc.rev, attachment, attachment.type);
           }
         });
       };
