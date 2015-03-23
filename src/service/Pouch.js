@@ -204,7 +204,7 @@ module.exports = function(ngModule) {
         return db.put(entry)
         .then(function(doc) {
           if(attachment){
-            return db.putAttachment(entry._id, attachment.name, doc.rev, attachment, attachment.type)
+            return db.putAttachment(entry._id, attachment.name, doc.rev, attachment, attachment.type);
           }
         });
       };
@@ -237,14 +237,14 @@ module.exports = function(ngModule) {
           var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + '/' + self.db);
           var local = getDB(self.db);
           console.log('Replicating', self.db);
-          var replicationOptions = _.extend({batch_size: 2}, opts);
+          var replicationOptions = _.extend({batch_size: 5, live: true}, opts);
 
           if(opts.getParams){
             replicationOptions.query_params = opts.getParams(user);
           }
 
           // Perform replication
-          local.replicate.from(remote, replicationOptions)
+          var rep = local.replicate.from(remote, replicationOptions)
             .on('complete', function (result) {
               try {
                 // Make an entry in the logs
@@ -255,6 +255,9 @@ module.exports = function(ngModule) {
                 deferred.reject(error);
               }
               return deferred.promise;
+            })
+            .on('paused', function(){
+              rep.cancel();
             });
         };
 
@@ -263,14 +266,14 @@ module.exports = function(ngModule) {
         var deferred = $q.defer();
 
         console.log('Syncing', self.db);
-        var syncOptions = _.extend({batch_size: 2}, opts);
+        var syncOptions = _.extend({batch_size: 5, live: true}, opts);
 
         if(opts.getParams){
           syncOptions.query_params = opts.getParams(user);
         }
 
         // Perform replication
-        PouchDB.sync(self.db, rooConfig.getCouchConfig().couchUrl + '/' + self.db, syncOptions)
+        var sync = PouchDB.sync(self.db, rooConfig.getCouchConfig().couchUrl + '/' + self.db, syncOptions)
           .on('complete', function (result) {
             try {
               // Make an entry in the logs
@@ -281,7 +284,10 @@ module.exports = function(ngModule) {
               deferred.reject(error);
             }
             return deferred.promise;
-          });
+          })
+            .on('paused', function(){
+              sync.cancel();
+            });
       };
 
       this.update = function(db, obj, id) {

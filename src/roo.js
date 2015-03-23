@@ -12,7 +12,8 @@ ngModule.provider('rooConfig', function() {
   };
 
   self.$dbOptions = {
-    auto_compaction: true
+    auto_compaction: true,
+    adapter: 'idb'
   };
 
   self.$dwnDbs = [];
