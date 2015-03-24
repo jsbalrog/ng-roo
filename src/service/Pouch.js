@@ -49,6 +49,16 @@ module.exports = function(ngModule) {
                     // Find if any document matches
                     if(doc.id === id) {
                       _.extend(doc.doc, JSON.parse(row.doc.change));
+
+                      // Handle attachments
+                      if(row.doc._attachments) {
+                        if(doc._attachments) {
+                          _.extend(doc._attachments, row.doc._attachments);
+                        }
+                        else {
+                          doc._attachments = row.doc._attachments;
+                        }
+                      }
                     }
                   }
                   d.resolve(doc);
@@ -100,7 +110,12 @@ module.exports = function(ngModule) {
 
                     // Handle attachments
                     if(row.doc._attachments) {
-                      _.extend(downDoc, JSON.parse(row.doc._attachments));
+                      if(downDoc._attachments) {
+                        _.extend(downDoc._attachments, row.doc._attachments);
+                      }
+                      else {
+                        downDoc._attachments = row.doc._attachments;
+                      }
                     }
                   }
                 }
