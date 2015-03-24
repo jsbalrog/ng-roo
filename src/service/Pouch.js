@@ -242,7 +242,7 @@ module.exports = function(ngModule) {
           var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + '/' + self.db);
           var local = getDB(self.db);
           console.log('Replicating', self.db);
-          var replicationOptions = _.extend({batch_size: 5, live: true}, opts);
+          var replicationOptions = _.extend({batch_size: 5}, opts);
 
           if(opts.getParams){
             replicationOptions.query_params = opts.getParams(user);
@@ -251,6 +251,7 @@ module.exports = function(ngModule) {
           // Perform replication
           var rep = local.replicate.from(remote, replicationOptions)
             .on('complete', function (result) {
+              rep.cancel;
               try {
                 // Make an entry in the logs
                 LocalStorageService.addEntryToLog(user.employeeID, self.db, result);
