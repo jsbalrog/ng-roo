@@ -266,7 +266,7 @@ module.exports = function(ngModule) {
           // Perform replication
           var rep = local.replicate.from(remote, replicationOptions)
             .on('complete', function (result) {
-              rep.cancel;
+              rep.cancel();
               try {
                 // Make an entry in the logs
                 LocalStorageService.addEntryToLog(user.employeeID, self.db, result);
