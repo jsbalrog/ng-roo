@@ -143,6 +143,8 @@ module.exports = function(ngModule) {
         return shimRecords(self.db, docs);
       }).then(function (docs) {
         deferred.resolve(_.pluck(docs.rows, 'doc'));
+      }).catch(function(err) {
+        deferred.reject(err);
       });
 
       return deferred.promise;
@@ -159,6 +161,8 @@ module.exports = function(ngModule) {
         return shimRecord(self.db, doc);
       }).then(function (doc) {
         deferred.resolve(doc);
+      }).catch(function(err) {
+        deferred.reject(err);
       });
       return deferred.promise;
     };
@@ -172,6 +176,8 @@ module.exports = function(ngModule) {
         return shimRecords(self.db, docs);
       }).then(function (docs) {
         deferred.resolve(_.pluck(docs.rows, 'doc'));
+      }).catch(function(err) {
+        deferred.reject(err);
       });
       return deferred.promise;
     };
@@ -185,6 +191,8 @@ module.exports = function(ngModule) {
         return shimRecord(self.db, doc);
       }).then(function (doc) {
         deferred.resolve(doc);
+      }).catch(function(err) {
+        deferred.reject(err);
       });
       return deferred.promise;
     };
@@ -203,6 +211,8 @@ module.exports = function(ngModule) {
         .then(function (blob) {
           var url = URL.createObjectURL(blob);
           deferred.resolve(url);
+        }).catch(function(err) {
+          deferred.reject(err);
         });
         return deferred.promise;
       };
@@ -346,11 +356,12 @@ module.exports = function(ngModule) {
 
           $q.all(promises).then(function(result) {
             deferred.resolve(result);
+          }).catch(function(err) {
+            deferred.reject(err);
           });
         });
         return deferred.promise;
       };
     };
-
   });
 };
