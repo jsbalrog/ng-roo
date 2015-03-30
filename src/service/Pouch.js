@@ -189,7 +189,8 @@ module.exports = function(ngModule) {
       var self = this;
       var deferred = $q.defer();
       getDB(self.db).get(docId, {
-        include_docs: true
+        include_docs: true,
+        attachments: true
       }).then(function (doc) {
         return shimRecord(self.db, doc);
       }).then(function (doc) {
