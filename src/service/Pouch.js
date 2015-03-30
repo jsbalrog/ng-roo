@@ -31,7 +31,8 @@ module.exports = function(ngModule) {
       _.each(jorgeNames, function (jorgeName) {
         // Get all the documents in the current write db
         getDB(jorgeName).allDocs({
-          include_docs: true
+          include_docs: true,
+          attachments: true
         })
           .then(function (jorgeDocs) {
             if (jorgeDocs.total_rows > 0) {
@@ -92,7 +93,8 @@ module.exports = function(ngModule) {
       _.each(jorgeNames, function (jorgeName) {
         // Get all the documents in the current write db
         getDB(jorgeName).allDocs({
-          include_docs: true
+          include_docs: true,
+          attachments: true
         }).then(function (jorgeDocs) {
             if (jorgeDocs.total_rows > 0) {
               // The the current write db has any documents, loop through
@@ -171,7 +173,8 @@ module.exports = function(ngModule) {
       var self = this;
       var deferred = $q.defer();
       getDB(self.db).allDocs({
-        include_docs: true
+        include_docs: true,
+        attachments: true
       }).then(function (docs) {
         return shimRecords(self.db, docs);
       }).then(function (docs) {
