@@ -143,8 +143,6 @@ module.exports = function(ngModule) {
         return shimRecords(self.db, docs);
       }).then(function (docs) {
         deferred.resolve(_.pluck(docs.rows, 'doc'));
-      }).catch(function(err) {
-        deferred.reject(err);
       });
 
       return deferred.promise;
@@ -161,8 +159,6 @@ module.exports = function(ngModule) {
         return shimRecord(self.db, doc);
       }).then(function (doc) {
         deferred.resolve(doc);
-      }).catch(function(err) {
-        deferred.reject(err);
       });
       return deferred.promise;
     };
@@ -176,8 +172,6 @@ module.exports = function(ngModule) {
         return shimRecords(self.db, docs);
       }).then(function (docs) {
         deferred.resolve(_.pluck(docs.rows, 'doc'));
-      }).catch(function(err) {
-        deferred.reject(err);
       });
       return deferred.promise;
     };
@@ -191,8 +185,6 @@ module.exports = function(ngModule) {
         return shimRecord(self.db, doc);
       }).then(function (doc) {
         deferred.resolve(doc);
-      }).catch(function(err) {
-        deferred.reject(err);
       });
       return deferred.promise;
     };
@@ -265,7 +257,7 @@ module.exports = function(ngModule) {
           var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + '/' + self.db);
           var local = getDB(self.db);
           console.log('Replicating', self.db);
-          var replicationOptions = _.extend({batch_size: 5, live: true}, opts);
+          var replicationOptions = _.extend({batch_size: 5}, opts);
 
           if(opts.getParams){
             replicationOptions.query_params = opts.getParams(user);
@@ -277,7 +269,8 @@ module.exports = function(ngModule) {
           var rep = local.replicate.from(remote, replicationOptions)
             .on('complete', function (result) {
               console.timeEnd(self.db);
-              $rootScope.$broadcast('replicating', false, self.db);
+	            $rootScope.$broadcast('replicating', false, self.db);
+              rep.cancel();
               try {
                 // Make an entry in the logs
                 LocalStorageService.addEntryToLog(user.employeeID, self.db, result);
@@ -353,8 +346,6 @@ module.exports = function(ngModule) {
 
           $q.all(promises).then(function(result) {
             deferred.resolve(result);
-          }).catch(function(err) {
-            deferred.reject(err);
           });
         });
         return deferred.promise;
