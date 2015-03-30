@@ -2,7 +2,7 @@
 module.exports = function(ngModule) {
   'use strict';
 
-  ngModule.service('Pouch', function ($q, rooConfig, LocalStorageService) {
+  ngModule.service('Pouch', function ($rootScope, $q, rooConfig, LocalStorageService) {
 
     var dbCache = {};
 
@@ -143,6 +143,8 @@ module.exports = function(ngModule) {
         return shimRecords(self.db, docs);
       }).then(function (docs) {
         deferred.resolve(_.pluck(docs.rows, 'doc'));
+      }).catch(function(err) {
+        deferred.reject(err);
       });
 
       return deferred.promise;
@@ -159,6 +161,8 @@ module.exports = function(ngModule) {
         return shimRecord(self.db, doc);
       }).then(function (doc) {
         deferred.resolve(doc);
+      }).catch(function(err) {
+        deferred.reject(err);
       });
       return deferred.promise;
     };
@@ -172,6 +176,8 @@ module.exports = function(ngModule) {
         return shimRecords(self.db, docs);
       }).then(function (docs) {
         deferred.resolve(_.pluck(docs.rows, 'doc'));
+      }).catch(function(err) {
+        deferred.reject(err);
       });
       return deferred.promise;
     };
@@ -185,6 +191,8 @@ module.exports = function(ngModule) {
         return shimRecord(self.db, doc);
       }).then(function (doc) {
         deferred.resolve(doc);
+      }).catch(function(err) {
+        deferred.reject(err);
       });
       return deferred.promise;
     };
@@ -264,8 +272,12 @@ module.exports = function(ngModule) {
           }
 
           // Perform replication
+          console.time(self.db);
+          $rootScope.$broadcast('replicating', true, self.db);
           var rep = local.replicate.from(remote, replicationOptions)
             .on('complete', function (result) {
+              console.timeEnd(self.db);
+              $rootScope.$broadcast('replicating', false, self.db);
               try {
                 // Make an entry in the logs
                 LocalStorageService.addEntryToLog(user.employeeID, self.db, result);
@@ -341,6 +353,8 @@ module.exports = function(ngModule) {
 
           $q.all(promises).then(function(result) {
             deferred.resolve(result);
+          }).catch(function(err) {
+            deferred.reject(err);
           });
         });
         return deferred.promise;
