@@ -129,6 +129,35 @@ module.exports = function(ngModule) {
       return deferred.promise;
     }
 
+  function RooObject(db, id){
+      this.$db = db;
+      this.$id = id;
+    };
+
+    RooObject.prototype.$$update = function(newData){
+      _.extend(this, newData);
+      return this;
+    };
+
+    var RooArray = function(db){
+      this.$db = db;
+      this.$list = [];
+
+      this.$list.$$update = function(newList){
+        updateRooArray(this, newList);
+        return this;
+      };
+
+      return this.$list;
+    };
+
+    function updateRooArray(self, newList){
+      self.length = 0;
+      newList.forEach(function(item){
+        self.push(item);
+      });
+    }
+
   return function (db) {
 
     this.db = db;
@@ -200,6 +229,73 @@ module.exports = function(ngModule) {
       });
       return deferred.promise;
     };
+
+    this.getAllRoo = function (rooArray) {
+        var self = this;
+        var r = getListener(self.db, rooArray);
+        var deferred = $q.defer();
+        getDB(self.db).allDocs({
+          include_docs: true
+        }).then(function (docs) {
+          return shimRecords(self.db, docs);
+        }).then(function (docs) {
+          var data = r.$$update(_.pluck(docs.rows, 'doc'));
+          deferred.resolve(data);
+        }).catch(function (err) {
+          deferred.reject(err);
+        });
+        return deferred.promise;
+      };
+
+    this.getRoo = function (docId, rooObject) {
+      var self = this;
+      var r = getListener(self.db, docId, rooObject);
+
+      var deferred = $q.defer();
+      getDB(self.db).get(docId, {
+        include_docs: true,
+        attachments: true
+      }).then(function (doc) {
+        return shimRecord(self.db, doc);
+      }).then(function (doc) {
+        deferred.resolve(r.$$update(doc));
+      }).catch(function(err) {
+        deferred.reject(err);
+      });
+      return deferred.promise;
+    };
+
+    function getListener(db, docId, roo){
+      var r;
+      rooConfig.getListeners()[db] = rooConfig.getListeners()[db] || {};
+      //First lets check to see if they want an array or an object
+      if(typeof docId === 'string'){
+        //Now we know they want an object, lets check to see if they passed in a roo.
+        if(roo){
+          //They provided us with a roo, so lets just assign it and keep going.
+          r = roo;
+        }else{
+          //No roo was passed in so lets first check our cache for it, if it
+          //does not exists in our cache, lets just create a new one.
+          r = rooConfig.getListeners()[db][docId] || new RooObject(db, docId);
+        }
+        //Lets keep the cache up to date
+        rooConfig.getListeners()[db][docId] = r;
+      }else{
+        //We are here because they want an array, lets check if they passed in roo.
+        if(roo){
+          //They provided us with a roo, so lets just assign it and keep going.
+          r = roo;
+        }else{
+          //No roo was passed in so lets first check our cache for it, if it
+          //does not exists in our cache, lets just create a new one.
+          r = rooConfig.getListeners()[db]["$$all"] || new RooArray(db, docId);
+        }
+        //Lets keep the cache up to date
+        rooConfig.getListeners()[db]["$$all"] = r;
+      }
+      return r;
+    }
 
 
       /**
@@ -278,13 +374,19 @@ module.exports = function(ngModule) {
           }
 
           // Perform replication
-          console.time(self.db);
           $rootScope.$broadcast('replicating', true, self.db);
           var rep = local.replicate.from(remote, replicationOptions)
             .on('complete', function (result) {
-              console.timeEnd(self.db);
 	            $rootScope.$broadcast('replicating', false, self.db);
-              rep.cancel();
+              var roos = rooConfig.getListeners()[self.db];
+              for(var i in roos){
+                var r = roos[i];
+                if(r.$id){
+                  self.getRoo(r.$id, r);
+                }else{
+                  self.getAllRoo(r);
+                }
+              }
               try {
                 // Make an entry in the logs
                 LocalStorageService.addEntryToLog(user.employeeID, self.db, result);
