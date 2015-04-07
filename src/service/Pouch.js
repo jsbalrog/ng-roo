@@ -364,7 +364,9 @@ module.exports = function(ngModule) {
           var deferred = $q.defer();
 
           // Initialize the remote and local databases
-          var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + '/' + self.db);
+          var token = 'Bearer ' + window.localStorage['auth-token'];
+          var headers = {Authorization: token};
+          var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + self.db, {headers: headers});
           var local = getDB(self.db);
           console.log('Replicating', self.db);
           var replicationOptions = _.extend({batch_size: 5}, opts);
@@ -414,7 +416,10 @@ module.exports = function(ngModule) {
         }
 
         // Perform replication
-        var sync = PouchDB.sync(self.db, rooConfig.getCouchConfig().couchUrl + '/' + self.db, syncOptions)
+        var token = 'Bearer ' + window.localStorage['auth-token'];
+        var headers = {Authorization: token};
+        var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + self.db, {headers: headers});
+        var sync = PouchDB.sync(self.db, remote, syncOptions)
           .on('complete', function (result) {
             try {
               // Make an entry in the logs
