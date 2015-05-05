@@ -352,13 +352,21 @@ module.exports = function(ngModule) {
 					return db.put(entry);
 				};
 
-			this.getDocCount = function() {
+			this.getDocCount = function(query) {
 				var self = this;
 				var db = getDB(self.db);
 
-				return db.allDocs().then(function(docs) {
-					return docs.rows.length;
-				});
+				if(query){
+					return db.query(query, {include_docs: false}).then(function(docs) {
+						return docs.rows.length;
+					});
+				}else{
+					return db.allDocs().then(function(docs) {
+						return docs.rows.length;
+					});
+				}
+
+
 			};
 
 			this.deleteEntry = function(doc) {
@@ -453,7 +461,8 @@ module.exports = function(ngModule) {
 				console.log('Syncing', self.db);
 				var syncOptions = _.extend({
 					batch_size: 5,
-					live: true
+					live: true,
+					retry: true
 				}, opts);
 
 				if (opts.getParams) {
