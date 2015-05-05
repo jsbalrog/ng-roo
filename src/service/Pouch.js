@@ -319,32 +319,38 @@ module.exports = function(ngModule) {
 				return deferred.promise;
 			};
 
-			this.putEntry = function(originTable, originId, changes, method, endpoint, data, headers, user, attachment, id) {
+			this.putEntry = function(originTable, originId, changes, method, endpoint, data, headers, user, attachments, id) {
+          if(endpoint.indexOf("://") === -1) { // check to make sure it's a fully qualified URL
+            endpoint = window.location.protocol + "//" + window.location.host + endpoint;
+          }
+	        var entry = {
+	            _id: new moment().toJSON(),
+	            change_id: '' + originTable + '::' + originId,
+	            change: JSON.stringify(changes),
+	            method: method,
+	            endpoint: endpoint,
+	            data: data,
+	            headers: headers,
+	            user: user
+	          },
+	          self = this,
+	          db = getDB(self.db);
 
-				if(endpoint.indexOf("://") === -1) { // check to make sure it's a fully qualified URL
-          endpoint = window.location.protocol + "//" + window.location.host + endpoint;
-        }
-
-				var entry = {
-						_id: new moment().toJSON(),
-						change_id: '' + originTable + '::' + originId,
-						change: JSON.stringify(changes),
-						method: method,
-						endpoint: endpoint,
-						data: data,
-						headers: headers,
-						user: user
-					},
-					self = this,
-					db = getDB(self.db);
-
-				return db.put(entry)
-					.then(function(doc) {
-						if (attachment) {
-							return db.putAttachment(entry._id, attachment.name, doc.rev, attachment, attachment.type);
+					if(attachments && attachments.length > 0){
+						if(!(attachments instanceof Array)){
+							attachments = [attachments];
 						}
-					});
-			};
+						entry._attachments = {};
+						attachments.forEach(function(attachment){
+							entry._attachments[attachment.name] = {
+								'content_type': attachment.type,
+								'data': attachment
+							}
+						});
+					}
+
+					return db.put(entry);
+				};
 
 			this.getDocCount = function() {
 				var self = this;
@@ -437,7 +443,7 @@ module.exports = function(ngModule) {
 					.on('paused', function() {
 						rep.cancel();
 					});
-				rooConfig.getListeners[self.db] = rep;
+					rooConfig.getReplications[self.db] = rep;
 			};
 
 			this.performSync = function(user, opts) {
@@ -496,7 +502,7 @@ module.exports = function(ngModule) {
 					.on('paused', function() {
 						console.log('paused');
 					});
-				rooConfig.getListeners[self.db] = sync;
+					rooConfig.getReplications[self.db] = sync;
 			};
 
 			this.update = function(db, obj, id) {

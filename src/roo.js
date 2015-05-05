@@ -19,32 +19,36 @@ ngModule.provider('rooConfig', function() {
 	self.$dwnDbs = [];
 	self.$upDbs = [];
 	self.$listeners = {};
+	self.$replications = {};
 
-	this.$get = function() {
-		return {
-			getDwnDbs: function() {
-				return self.$dwnDbs;
-			},
-			getUpDbs: function() {
-				return self.$upDbs;
-			},
-			getCouchConfig: function() {
-				return self.$couchConfig;
-			},
-			getOptions: function() {
-				return self.$options;
-			},
-			getDbOptions: function() {
-				return self.$dbOptions;
-			},
-			getListeners: function() {
-				return self.$listeners;
-			},
-			clearReplications: function() {
-				for (var i in self.$listeners) {
-					self.$listeners[i].cancel();
+  this.$get = function() {
+    return {
+      getDwnDbs: function() {
+        return self.$dwnDbs;
+      },
+      getUpDbs: function() {
+        return self.$upDbs;
+      },
+      getCouchConfig: function() {
+        return self.$couchConfig;
+      },
+      getOptions: function(){
+        return self.$options;
+      },
+      getDbOptions: function(){
+        return self.$dbOptions;
+      },
+      getListeners: function(){
+        return self.$listeners;
+      },
+			getReplications: function(){
+        return self.$replications;
+      },
+			clearReplications: function(){
+				for(var i in self.$replications){
+					self.$replications[i].cancel();
 				}
-				self.$listeners = {};
+				self.$replications = {};
 			}
 		};
 	};
