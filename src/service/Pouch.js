@@ -332,7 +332,8 @@ module.exports = function(ngModule) {
 	            endpoint: endpoint,
 	            data: data,
 	            headers: headers,
-	            user: user
+	            user: user,
+							networkType: 'Not supported'
 	          },
 	          self = this,
 	          db = getDB(self.db);
