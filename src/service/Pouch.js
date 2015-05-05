@@ -320,10 +320,15 @@ module.exports = function(ngModule) {
 			};
 
 			this.putEntry = function(originTable, originId, changes, method, endpoint, data, headers, user, attachment, id) {
+				var networkType = 'Not supported in this browser';
 
 				if(endpoint.indexOf("://") === -1) { // check to make sure it's a fully qualified URL
           endpoint = window.location.protocol + "//" + window.location.host + endpoint;
         }
+
+				if(navigator.connection && navigator.connection.type) {
+					networkType = navigator.connection.type;
+				}
 
 				var entry = {
 						_id: new moment().toJSON(),
@@ -333,7 +338,8 @@ module.exports = function(ngModule) {
 						endpoint: endpoint,
 						data: data,
 						headers: headers,
-						user: user
+						user: user,
+						networkType: networkType
 					},
 					self = this,
 					db = getDB(self.db);
