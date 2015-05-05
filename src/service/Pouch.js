@@ -320,6 +320,11 @@ module.exports = function(ngModule) {
 			};
 
 			this.putEntry = function(originTable, originId, changes, method, endpoint, data, headers, user, attachment, id) {
+
+				if(endpoint.indexOf("://") === -1) { // check to make sure it's a fully qualified URL
+          endpoint = window.location.protocol + "//" + window.location.host + endpoint;
+        }
+
 				var entry = {
 						_id: new moment().toJSON(),
 						change_id: '' + originTable + '::' + originId,
@@ -339,6 +344,15 @@ module.exports = function(ngModule) {
 							return db.putAttachment(entry._id, attachment.name, doc.rev, attachment, attachment.type);
 						}
 					});
+			};
+
+			this.getDocCount = function() {
+				var self = this;
+				var db = getDB(self.db);
+
+				return db.allDocs().then(function(docs) {
+					return docs.rows.length;
+				});
 			};
 
 			this.deleteEntry = function(doc) {
