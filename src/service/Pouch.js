@@ -341,12 +341,15 @@ module.exports = function(ngModule) {
 							attachments = [attachments];
 						}
 						entry._attachments = {};
+						var attachmentSize = 0;
 						attachments.forEach(function(attachment){
+							attachmentSize += attachment.size;
 							entry._attachments[attachment.name] = {
 								'content_type': attachment.type,
 								'data': attachment
 							}
 						});
+						entry.attachmentSize = attachmentSize;
 					}
 
 					return db.put(entry);
