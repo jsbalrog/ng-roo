@@ -323,6 +323,7 @@ module.exports = function(ngModule) {
           if(endpoint.indexOf("://") === -1) { // check to make sure it's a fully qualified URL
             endpoint = window.location.protocol + "//" + window.location.host + endpoint;
           }
+
 	        var entry = {
 	            _id: new moment().toJSON(),
 	            change_id: '' + originTable + '::' + originId,
@@ -335,6 +336,10 @@ module.exports = function(ngModule) {
 	          },
 	          self = this,
 	          db = getDB(self.db);
+
+					if(navigator.connection && navigator.connection.type) {
+						entry.networkType = navigator.connection.type;
+					}
 
 					if(attachments && attachments.length > 0){
 						if(!(attachments instanceof Array)){
