@@ -503,8 +503,10 @@ module.exports = function(ngModule) {
 						if (info.direction === 'push') {
 							var ids = [];
 							info.change.docs.forEach(function(doc) {
-								if (!doc._deleted) {
+								if(!doc.sent && !doc._deleted){
 									ids.push(doc._id);
+									doc.sent = new moment().toJSON();
+									getDB(self.db).put(doc);
 								}
 							});
 							queueJorgeRequest(ids);
