@@ -320,46 +320,74 @@ module.exports = function(ngModule) {
 			};
 
 			this.putEntry = function(originTable, originId, changes, method, endpoint, data, headers, user, attachments, id) {
-          if(endpoint.indexOf("://") === -1) { // check to make sure it's a fully qualified URL
-            endpoint = window.location.protocol + "//" + window.location.host + endpoint;
-          }
+	          if(endpoint.indexOf("://") === -1) { // check to make sure it's a fully qualified URL
+	            endpoint = window.location.protocol + "//" + window.location.host + endpoint;
+	          }
 
-	        var entry = {
-	            _id: new moment().toJSON(),
-	            change_id: '' + originTable + '::' + originId,
-	            change: JSON.stringify(changes),
-	            method: method,
-	            endpoint: endpoint,
-	            data: data,
-	            headers: headers,
-	            user: user,
-							networkType: 'Not supported'
-	          },
-	          self = this,
-	          db = getDB(self.db);
+		        var entry = {
+		            _id: new moment().toJSON(),
+		            change_id: '' + originTable + '::' + originId,
+		            change: JSON.stringify(changes),
+		            method: method,
+		            endpoint: endpoint,
+		            data: data,
+		            headers: headers,
+		            user: user,
+								networkType: 'Not supported'
+		          },
+		          self = this,
+		          db = getDB(self.db);
 
-					if(navigator.connection && navigator.connection.type) {
-						entry.networkType = navigator.connection.type;
-					}
-
-					if(attachments && attachments.length > 0){
-						if(!(attachments instanceof Array)){
-							attachments = [attachments];
-						}
-						entry._attachments = {};
-						var attachmentSize = 0;
-						attachments.forEach(function(attachment){
-							attachmentSize += attachment.size;
-							entry._attachments[attachment.name] = {
-								'content_type': attachment.type,
-								'data': attachment
+						if(attachments && attachments.length > 0){
+							if(!(attachments instanceof Array)){
+								attachments = [attachments];
 							}
-						});
-						entry.attachmentSize = attachmentSize;
-					}
+							entry._attachments = {};
+							var attachmentSize = 0;
+							attachments.forEach(function(attachment){
+								attachmentSize += attachment.size;
+								entry._attachments[attachment.name] = {
+									'content_type': attachment.type,
+									'data': attachment
+								}
+							});
+							entry.attachmentSize = attachmentSize;
+						}
 
-					return db.put(entry);
-				};
+						if(navigator.connection && navigator.connection.type) {
+							entry.networkType = navigator.connection.type;
+						}
+
+						return navigator.getBattery()
+						.then(function(battery){
+							return {
+								charging: battery.charging,
+								chargingTime: battery.chargingTime,
+								dischargingTime: battery.dischargingTime,
+								level: battery.level
+							};
+						})
+						.then(function(batteryInfo){
+							entry.batteryInfo = batteryInfo;
+							return getCoords();
+						})
+						.then(function(coords){
+							entry.location = {
+								accuracy: coords.accuracy,
+								altitude: coords.altitude,
+								altitudeAccuracy: coords.altitudeAccuracy,
+								heading: coords.heading,
+								latitude: coords.latitude,
+								longitude: coords.longitude,
+								speed: coords.speed};
+							return db.put(entry);
+						})
+						.catch(function(){
+							console.log('JORGe error!', arguments);
+							return db.put(entry);
+						});
+
+					};
 
 			this.getDocCount = function(query) {
 				var self = this;
@@ -374,9 +402,28 @@ module.exports = function(ngModule) {
 						return docs.rows.length;
 					});
 				}
-
-
 			};
+
+			function getCoords(){
+	      var timeoutVal = 10 * 1000 * 1000;
+	      var deferred = $q.defer();
+	      window.navigator.geolocation.getCurrentPosition(
+	        function(position){
+	          deferred.resolve(position.coords);
+	        },
+	        function(){
+	          var errors = {
+	            1: 'Permission denied',
+	            2: 'Position unavailable',
+	            3: 'Request timeout'
+	          };
+	          deferred.reject("Error: " + errors[error.code]);
+	        },
+	        { enableHighAccuracy: true, timeout: timeoutVal, maximumAge: 0 }
+	      );
+	      return deferred.promise;
+		    }
+ 			};
 
 			this.deleteEntry = function(doc) {
 				var self = this;
@@ -484,7 +531,7 @@ module.exports = function(ngModule) {
 					Authorization: token
 				};
 				var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + self.db, {
-					headers: headers
+					ajax: {headers: headers, timeout: 60000}
 				});
 				var sync = PouchDB.sync(self.db, remote, syncOptions)
 					.on('complete', function(result) {
@@ -500,18 +547,7 @@ module.exports = function(ngModule) {
 						return deferred.promise;
 					})
 					.on('change', function(info) {
-						if (info.direction === 'push') {
-							var ids = [];
-							info.change.docs.forEach(function(doc) {
-								if(!doc.sent && !doc._deleted){
-									ids.push(doc._id);
-									doc.sent = new moment().toJSON();
-									getDB(self.db).put(doc);
-								}
-							});
-							queueJorgeRequest(ids);
-						}
-						console.log('info', info);
+						console.log('change', info);
 					})
 					.on('error', function(err) {
 						console.log('error', err);
@@ -562,23 +598,6 @@ module.exports = function(ngModule) {
 				});
 				return deferred.promise;
 			};
-
-
-			function queueJorgeRequest(ids) {
-				var temp = LocalStorageService.getItem('sqsIds');
-				if (temp) {
-					ids = ids.concat(_.pluck(temp, 'id'));
-				}
-				$http.post('/gemini/jorge/queue-processing', {
-						ids: ids
-					})
-					.then(function(resp) {
-						LocalStorageService.setItem('sqsIds', resp.data.error)
-					})
-					.catch(function(err) {
-						console.log('POST: [/gemini/jorge/queue-processing] error:' + err);
-					});
-			}
 		};
 	});
 };
