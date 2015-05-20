@@ -598,6 +598,6 @@ module.exports = function(ngModule) {
 				});
 				return deferred.promise;
 			};
-		};
+
 	});
 };
