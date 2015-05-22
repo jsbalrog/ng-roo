@@ -502,12 +502,17 @@ module.exports = function(ngModule) {
 							console.log(error);
 							deferred.reject(error);
 						}
-						return deferred.promise;
 					})
 					.on('paused', function() {
 						rep.cancel();
-					});
-					rooConfig.getReplications[self.db] = rep;
+            deferred.resolve();
+					})
+          .on('denied', function(error) {
+            rep.cancel();
+            deferred.reject(error);
+          });
+          rooConfig.getReplications[self.db] = rep;
+          return deferred.promise;
 			};
 
 			this.performSync = function(user, opts) {
@@ -544,21 +549,29 @@ module.exports = function(ngModule) {
 							console.log(error);
 							deferred.reject(error);
 						}
-						return deferred.promise;
 					})
 					.on('change', function(info) {
 						console.log('change', info);
+            deferred.resolve();
 					})
 					.on('error', function(err) {
 						console.log('error', err);
+            deferred.reject(err);
 					})
 					.on('active', function() {
 						console.log('active');
+            deferred.resolve();
 					})
 					.on('paused', function() {
 						console.log('paused');
-					});
+            deferred.resolve();
+					})
+          .on('denied', function(err) {
+            console.log('denied');
+            deferred.reject(err);
+          });
 					rooConfig.getReplications[self.db] = sync;
+          return deferred.promise;
 			};
 
 			this.update = function(db, obj, id) {
