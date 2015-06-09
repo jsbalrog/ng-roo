@@ -469,7 +469,6 @@ module.exports = function (ngModule) {
 
       this.performReplication = function (user, opts) {
         var self = this;
-        var deferred = $q.defer();
 
         // Initialize the remote and local databases
         var token = 'Bearer ' + window.localStorage['auth-token'];
@@ -492,7 +491,7 @@ module.exports = function (ngModule) {
         // Perform replication
         var rep = local.replicate.from(remote, replicationOptions)
           .on('complete', function (result) {
-            $rootScope.$broadcast('replicating', false, self.db);
+						$rootScope.$emit('ng-roo-replicate-complete', result);
             var roos = rooConfig.getListeners()[self.db];
             for (var i in roos) {
               var r = roos[i];
@@ -506,27 +505,23 @@ module.exports = function (ngModule) {
             try {
               // Make an entry in the logs
               LocalStorageService.addEntryToLog(user.employeeID, self.db, result);
-              deferred.resolve();
             } catch (error) {
               console.log(error);
-              deferred.reject(error);
             }
           })
           .on('paused', function () {
+						$rootScope.$emit('ng-roo-replicate-paused');
             rep.cancel();
-            deferred.resolve();
           })
           .on('denied', function (err) {
+						$rootScope.$emit('ng-roo-replicate-denied', err);
             rep.cancel();
-            deferred.resolve();
           });
         rooConfig.getReplications[self.db] = rep;
-        return deferred.promise;
       };
 
       this.performSync = function (user, opts) {
         var self = this;
-        var deferred = $q.defer();
 
         console.log('Syncing', self.db);
         var syncOptions = _.extend({
@@ -539,7 +534,7 @@ module.exports = function (ngModule) {
           syncOptions.query_params = opts.getParams(user);
         }
 
-        // Perform replication
+        // Perform sync
         var token = 'Bearer ' + window.localStorage['auth-token'];
         var headers = {
           Authorization: token
@@ -549,38 +544,30 @@ module.exports = function (ngModule) {
         });
         var sync = PouchDB.sync(self.db, remote, syncOptions)
           .on('complete', function (result) {
-            console.log('complete');
+						$rootScope.$emit('ng-roo-sync-complete', result);
             try {
               // Make an entry in the logs
               LocalStorageService.addEntryToLog(user.employeeID, self.db, result);
-              deferred.resolve();
             } catch (error) {
               console.log(error);
-              deferred.reject(error);
             }
           })
           .on('change', function (info) {
-            console.log('change', info);
-            deferred.resolve(info);
+						$rootScope.$emit('ng-roo-sync-change', info);
           })
           .on('error', function (err) {
-            console.log('error', err);
-            deferred.reject(err);
+						$rootScope.$emit('ng-roo-sync-error', err);
           })
           .on('active', function () {
-            console.log('active');
-            deferred.resolve();
+						$rootScope.$emit('ng-roo-sync-active');
           })
           .on('paused', function () {
-            console.log('paused');
-            deferred.resolve();
+						$rootScope.$emit('ng-roo-sync-paused');
           })
           .on('denied', function (err) {
-            console.log('denied');
-            deferred.reject(err);
+						$rootScope.$emit('ng-roo-sync-denied', err);
           });
         rooConfig.getReplications[self.db] = sync;
-        return deferred.promise;
       };
 
       this.update = function (db, obj, id) {
