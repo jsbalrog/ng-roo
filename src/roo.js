@@ -18,7 +18,6 @@ ngModule.provider('rooConfig', function() {
 
 	self.$dwnDbs = [];
 	self.$upDbs = [];
-	self.$listeners = {};
 	self.$replications = {};
 
   this.$get = function() {
@@ -37,9 +36,6 @@ ngModule.provider('rooConfig', function() {
       },
       getDbOptions: function(){
         return self.$dbOptions;
-      },
-      getListeners: function(){
-        return self.$listeners;
       },
 			getReplications: function(){
         return self.$replications;
