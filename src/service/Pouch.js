@@ -182,6 +182,17 @@ module.exports = function (ngModule) {
         return deferred.promise;
       };
 
+      this.destroy = function() {
+        var self = this;
+        return getDB(self.db).query(function(doc, emit) {
+          emit(doc);
+        }, {limit: 0}).then(function () {
+          // then destroy after the index is built
+          console.log('Destroying ' + self.db);
+          return getDB(self.db).destroy();
+        });
+      };
+      
       /**
        * Retrieve attachment's local url
        * @param {string} docId - Document's id were the attachment exists.
@@ -263,6 +274,10 @@ module.exports = function (ngModule) {
               longitude: coords.longitude,
               speed: coords.speed
             };
+            return getUserAgent();
+          })
+          .then(function(userAgent) {
+            entry.userAgent = userAgent;
             return db.put(entry);
           })
           .catch(function () {
@@ -287,6 +302,13 @@ module.exports = function (ngModule) {
           });
         }
       };
+
+      function getUserAgent() {
+        var deferred = $q.defer();
+        var returnVal = window.navigator.userAgent;
+        deferred.resolve(returnVal);
+        return deferred.promise;
+      }
 
       function getCoords() {
         var timeoutVal = 10 * 1000 * 1000;
