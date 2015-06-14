@@ -184,13 +184,7 @@ module.exports = function (ngModule) {
 
       this.destroy = function() {
         var self = this;
-        return getDB(self.db).query(function(doc, emit) {
-          emit(doc);
-        }, {limit: 0}).then(function () {
-          // then destroy after the index is built
-          console.log('Destroying ' + self.db);
-          return getDB(self.db).destroy();
-        });
+        return getDB(self.db).destroy();
       };
       
       /**
