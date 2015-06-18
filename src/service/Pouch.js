@@ -186,7 +186,7 @@ module.exports = function (ngModule) {
         var self = this;
         return getDB(self.db).destroy();
       };
-      
+
       /**
        * Retrieve attachment's local url
        * @param {string} docId - Document's id were the attachment exists.
@@ -259,15 +259,20 @@ module.exports = function (ngModule) {
             return getCoords();
           })
           .then(function (coords) {
-            entry.location = {
-              accuracy: coords.accuracy,
-              altitude: coords.altitude,
-              altitudeAccuracy: coords.altitudeAccuracy,
-              heading: coords.heading,
-              latitude: coords.latitude,
-              longitude: coords.longitude,
-              speed: coords.speed
-            };
+            if(coords) {
+              entry.location = {
+                accuracy: coords.accuracy,
+                altitude: coords.altitude,
+                altitudeAccuracy: coords.altitudeAccuracy,
+                heading: coords.heading,
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+                speed: coords.speed
+              };
+            }
+            else {
+              entry.location = "offline";
+            }
             return getUserAgent();
           })
           .then(function(userAgent) {
@@ -305,22 +310,26 @@ module.exports = function (ngModule) {
       }
 
       function getCoords() {
-        var timeoutVal = 10 * 1000 * 1000;
         var deferred = $q.defer();
-        window.navigator.geolocation.getCurrentPosition(
-          function (position) {
-            deferred.resolve(position.coords);
-          },
-          function () {
-            var errors = {
-              1: 'Permission denied',
-              2: 'Position unavailable',
-              3: 'Request timeout'
-            };
-            deferred.reject("Error: " + errors[error.code]);
-          },
-          {enableHighAccuracy: true, timeout: timeoutVal, maximumAge: 0}
-        );
+        if(navigator.onLine) {
+          var timeoutVal = 10 * 1000 * 1000;
+          window.navigator.geolocation.getCurrentPosition(
+            function (position) {
+              deferred.resolve(position.coords);
+            },
+            function () {
+              var errors = {
+                1: 'Permission denied',
+                2: 'Position unavailable',
+                3: 'Request timeout'
+              };
+              deferred.reject("Error: " + errors[error.code]);
+            },
+            {enableHighAccuracy: true, timeout: timeoutVal, maximumAge: 0});
+        }
+        else {
+          deferred.resolve(null);
+        }
         return deferred.promise;
       };
 
