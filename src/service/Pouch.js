@@ -317,7 +317,7 @@ module.exports = function (ngModule) {
             function (position) {
               deferred.resolve(position.coords);
             },
-            function () {
+            function (error) {
               var errors = {
                 1: 'Permission denied',
                 2: 'Position unavailable',
