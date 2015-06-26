@@ -1,4 +1,4 @@
-/*global window: false */
+/*global window: false, navigator */
 module.exports = function (ngModule) {
   'use strict';
 
@@ -207,12 +207,12 @@ module.exports = function (ngModule) {
       };
 
       this.putEntry = function (originTable, originId, changes, method, endpoint, data, headers, user, attachments, id) {
-        if (endpoint.indexOf("://") === -1) { // check to make sure it's a fully qualified URL
-          endpoint = window.location.protocol + "//" + window.location.host + endpoint;
+        if (endpoint.indexOf('://') === -1) { // check to make sure it's a fully qualified URL
+          endpoint = window.location.protocol + '//' + window.location.host + endpoint;
         }
 
         var entry = {
-            _id: new moment().toJSON(),
+            _id: id || new moment().toJSON(),
             change_id: '' + originTable + '::' + originId,
             change: JSON.stringify(changes),
             method: method,
@@ -236,7 +236,7 @@ module.exports = function (ngModule) {
             entry._attachments[attachment.name] = {
               'content_type': attachment.type,
               'data': attachment
-            }
+            };
           });
           entry.attachmentSize = attachmentSize;
         }
@@ -271,7 +271,7 @@ module.exports = function (ngModule) {
               };
             }
             else {
-              entry.location = "offline";
+              entry.location = 'offline';
             }
             return getUserAgent();
           })
@@ -323,7 +323,7 @@ module.exports = function (ngModule) {
                 2: 'Position unavailable',
                 3: 'Request timeout'
               };
-              deferred.reject("Error: " + errors[error.code]);
+              deferred.reject('Error: ' + errors[error.code]);
             },
             {enableHighAccuracy: true, timeout: timeoutVal, maximumAge: 0});
         }
@@ -331,7 +331,7 @@ module.exports = function (ngModule) {
           deferred.resolve(null);
         }
         return deferred.promise;
-      };
+      }
 
       this.deleteEntry = function (doc) {
         var self = this;
@@ -341,12 +341,52 @@ module.exports = function (ngModule) {
             .get(doc)
             .then(function (doc) {
               return getDB(self.db).remove(doc);
-            })
+            });
         }
         else {
           return getDB(self.db).remove(doc);
         }
-      }
+      };
+
+      /**
+       * Replicate db with predefined CouchDB
+       * @param [strings] docIds - Ids of documents that need to be replicated
+       */
+      this.replicateIds = function (docIds) {
+        var self = this;
+
+        // Initialize the remote and local databases
+        var token = 'Bearer ' + window.localStorage['auth-token'];
+        var headers = { Authorization: token };
+        var remote = new PouchDB(
+          rooConfig.getCouchConfig().couchUrl + self.db,
+          {headers: headers}
+          );
+        var local = getDB(self.db);
+        console.log('Replicating ids', docIds);
+        var replicationOptions = {
+          doc_ids : docIds,
+          batch_size: 5
+        };
+
+        // Perform replication
+        var rep = local.replicate.from(remote, replicationOptions)
+          .on('complete', function (result) {
+						$rootScope.$emit('ng-roo-replicate-ids-complete', result, self.db, docIds);
+            try {
+            } catch (error) {
+              console.log(error);
+            }
+          })
+          .on('paused', function () {
+						$rootScope.$emit('ng-roo-replicate-ids-paused');
+            rep.cancel();
+          })
+          .on('denied', function (err) {
+						$rootScope.$emit('ng-roo-replicate-ids-denied', err);
+            rep.cancel();
+          });
+      };
 
       /**
        * Replicate db with predefined CouchDB
@@ -356,7 +396,7 @@ module.exports = function (ngModule) {
       this.replicateDB = function (user, opts) {
         var self = this;
 
-        if (rooConfig.getOptions().destoryOnSync) {
+        if (rooConfig.getOptions().destroyOnSync) {
           console.log('removing table', self.db);
           return getDB(self.db)
             .destroy()
