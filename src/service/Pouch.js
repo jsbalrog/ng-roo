@@ -184,7 +184,10 @@ module.exports = function (ngModule) {
 
       this.destroy = function() {
         var self = this;
-        return getDB(self.db).destroy();
+        return getDB(self.db).destroy().then(function() {
+          // Delete the dbCache for the db
+          return delete dbCache[self.db];
+        });
       };
 
       /**
@@ -398,8 +401,7 @@ module.exports = function (ngModule) {
 
         if (rooConfig.getOptions().destroyOnSync) {
           console.log('removing table', self.db);
-          return getDB(self.db)
-            .destroy()
+          return self.destroy()
             .then(function () {
               return self.performReplication(user, opts);
             });
