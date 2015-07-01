@@ -213,7 +213,7 @@ module.exports = function (ngModule) {
         if (endpoint.indexOf('://') === -1) { // check to make sure it's a fully qualified URL
           endpoint = window.location.protocol + '//' + window.location.host + endpoint;
         }
-        var id = new moment().toJSON() + '::' + user.employeeID;
+        var id = new moment().toJSON() + '::' + uuid();
         var entry = {
             _id: id,
             change_id: '' + originTable + '::' + originId,
@@ -334,6 +334,15 @@ module.exports = function (ngModule) {
           deferred.resolve(null);
         }
         return deferred.promise;
+      }
+
+      //To limit the amount of libraries that we depend on this was copied from
+      //stackoverflow, because stackoverflow.
+      function uuid(){
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return v.toString(16);
+        });
       }
 
       this.deleteEntry = function (doc) {
