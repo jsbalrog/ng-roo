@@ -209,13 +209,13 @@ module.exports = function (ngModule) {
         return deferred.promise;
       };
 
-      this.putEntry = function (originTable, originId, changes, method, endpoint, data, headers, user, attachments, id) {
+      this.putEntry = function (originTable, originId, changes, method, endpoint, data, headers, user, attachments) {
         if (endpoint.indexOf('://') === -1) { // check to make sure it's a fully qualified URL
           endpoint = window.location.protocol + '//' + window.location.host + endpoint;
         }
-
+        var id = new moment().toJSON() + '::' + user.employeeID;
         var entry = {
-            _id: id || new moment().toJSON(),
+            _id: id,
             change_id: '' + originTable + '::' + originId,
             change: JSON.stringify(changes),
             method: method,
