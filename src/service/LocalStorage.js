@@ -83,12 +83,19 @@ module.exports = function(ngModule) {
 			}
 		}
 
+		function removeItem(key) {
+			if(key) {
+				localStorage.removeItem(key);
+			}
+		}
+
 		return {
 			addEntryToLog: addEntryToLog,
 			getLog: getLog,
 			clearLog: clearLog,
 			setItem: setItem,
-			getItem: getItem
+			getItem: getItem,
+			removeItem: removeItem
 		};
 	});
 };
