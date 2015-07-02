@@ -282,8 +282,8 @@ module.exports = function (ngModule) {
             entry.userAgent = userAgent;
             return db.put(entry);
           })
-          .catch(function () {
-            console.log('JORGe error!', arguments);
+          .catch(function (err) {
+            console.log('JORGe error!', err);
             return db.put(entry);
           });
 
