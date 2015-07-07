@@ -282,6 +282,13 @@ module.exports = function (ngModule) {
             entry.userAgent = userAgent;
             return db.put(entry);
           })
+          .then(function() {
+            return db.info();
+          })
+          .then(function(info) {
+            $rootScope.$emit('jorge-count', info.doc_count);
+            return info;
+          })
           .catch(function (err) {
             console.log('JORGe error!', err);
             return db.put(entry);
