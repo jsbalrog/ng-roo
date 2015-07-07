@@ -209,7 +209,7 @@ module.exports = function (ngModule) {
         return deferred.promise;
       };
 
-      this.putEntry = function (originTable, originId, changes, method, endpoint, data, headers, user, attachments) {
+      this.putEntry = function (originTable, originId, changes, method, endpoint, data, headers, user, attachments, meta) {
         if (endpoint.indexOf('://') === -1) { // check to make sure it's a fully qualified URL
           endpoint = window.location.protocol + '//' + window.location.host + endpoint;
         }
@@ -280,6 +280,9 @@ module.exports = function (ngModule) {
           })
           .then(function(userAgent) {
             entry.userAgent = userAgent;
+            if(!_.isEmpty(meta)){
+							entry.meta = meta;
+						}
             return db.put(entry);
           })
           .then(function() {
@@ -520,19 +523,15 @@ module.exports = function (ngModule) {
         rooConfig.getReplications[self.db] = sync;
       };
 
-      this.update = function (db, obj, id) {
+      this.update = function (updatedDoc) {
+				var self = this;
         var deferred = $q.defer();
-        var cushiondb = getDB(db);
-        cushiondb.get(id).then(function success(doc) {
-          var newDoc = _.extend(doc, obj);
-          cushiondb.put(newDoc).then(function success(result) {
-            deferred.resolve(result);
-          }, function error(result) {
-            deferred.reject(result);
-          });
-        }, function error(result) {
-          deferred.reject(result);
-        });
+        var cushiondb = getDB(self.db);
+				cushiondb.put(updatedDoc).then(function success(result) {
+					deferred.resolve(result);
+				}, function error(err) {
+					deferred.reject(err);
+				});
         return deferred.promise;
       };
 
