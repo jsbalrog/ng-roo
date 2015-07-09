@@ -309,8 +309,8 @@ module.exports = function (ngModule) {
           });
         }
         else {
-          return db.allDocs().then(function (docs) {
-            return docs.rows.length;
+          return db.info().then(function (info) {
+            return info.doc_count;
           });
         }
       };
