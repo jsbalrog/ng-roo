@@ -42,22 +42,20 @@ module.exports = function (ngModule) {
                 // matches the current read-only db
                 _.each(jorgeDocs.rows, function (row) {
                   var d = $q.defer();
-                  var change_id = row.doc.change_id;
-                  var split = change_id.split('::');
-                  var dbName = split[0];
-                  var id = split[1];
+                  var dbName = row.key[0];
+                  var id = row.key[1];
                   if (dbName === downDbName) {
                     // Find if any document matches
                     if (doc.id === id) {
-                      _.extend(doc.doc, JSON.parse(row.doc.change));
+                      _.extend(doc.doc, JSON.parse(row.value.change));
 
                       // Handle attachments
-                      if (row.doc._attachments) {
+                      if (row.value._attachments) {
                         if (doc._attachments) {
-                          _.extend(doc._attachments, row.doc._attachments);
+                          _.extend(doc._attachments, row.value._attachments);
                         }
                         else {
-                          doc._attachments = row.doc._attachments;
+                          doc._attachments = row.value._attachments;
                         }
                       }
                     }
@@ -116,6 +114,7 @@ module.exports = function (ngModule) {
               });
             }
           });
+          return downDoc;
         });
     }
 
