@@ -84,7 +84,7 @@ module.exports = function (ngModule) {
      * so, for example, looks something like this:
      * "gemini_cushion_fist::WO-20150226-2949689"
      */
-    function shimRecord(downDbName, downDoc, view) {
+    function shimRecord(downDbName, downDoc) {
       var promises   = [];
       var jorgeNames = rooConfig.getUpDbs(); //JORGE
 
