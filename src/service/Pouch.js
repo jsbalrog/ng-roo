@@ -24,17 +24,17 @@ module.exports = function (ngModule) {
      *"gemini_cushion_fist::WO-20150226-2949689"
      */
     function shimRecords(downDbName, downDocs) {
-      var deferred = $q.defer();
-      var promises = [];
+      var promises   = [];
+      var deferred   = $q.defer();
       var jorgeNames = rooConfig.getUpDbs();
       // Loop through all of the write databases
       _.each(jorgeNames, function (jorgeName) {
-        // Get all the documents in the current write db
-        getDB(jorgeName).allDocs({
-          include_docs: true,
-          attachments: true
-        })
-          .then(function (jorgeDocs) {
+        promises.push(getDB(jorgeName).query('filter/record_by_table_and_service_no', {startKey: [downDbName, 0], endKey: [downDbName, {}]}));
+      });
+
+      return $q.all(promises)
+        .then(function (jorgeDocsPerDbName) {
+          _.each(jorgeDocsPerDbName, function(jorgeDocs) {
             if (jorgeDocs.total_rows > 0) {
               _.each(downDocs.rows, function (doc) {
                 // If the current write db has any documents, loop through
@@ -71,9 +71,9 @@ module.exports = function (ngModule) {
               deferred.resolve(downDocs);
             });
           });
-      });
 
-      return deferred.promise;
+          return deferred.promise;
+        });
     }
 
     /**
@@ -86,47 +86,37 @@ module.exports = function (ngModule) {
      * so, for example, looks something like this:
      * "gemini_cushion_fist::WO-20150226-2949689"
      */
-    function shimRecord(downDbName, downDoc) {
-      var deferred = $q.defer();
-      var jorgeNames = rooConfig.getUpDbs();
+    function shimRecord(downDbName, downDoc, view) {
+      var promises   = [];
+      var jorgeNames = rooConfig.getUpDbs(); //JORGE
+
       // Loop through all of the write databases
       _.each(jorgeNames, function (jorgeName) {
-        // Get all the documents in the current write db
-        getDB(jorgeName).allDocs({
-          include_docs: true,
-          attachments: true
-        }).then(function (jorgeDocs) {
-          if (jorgeDocs.total_rows > 0) {
-            // The the current write db has any documents, loop through
-            // them and see if any of the documents have a change_id that
-            // matches the current read-only db
-            _.each(jorgeDocs.rows, function (row) {
-              var change_id = row.doc.change_id;
-              var split = change_id.split('::');
-              var dbName = split[0];
-              var id = split[1];
-              if (dbName === downDbName) {
-                // Find if any document matches
-                if (downDoc._id === id) {
-                  _.extend(downDoc, JSON.parse(row.doc.change));
+        promises.push(getDB(jorgeName).query('filter/record_by_table_and_service_no', {key: [downDbName, downDoc._id]}));
+      });
 
-                  // Handle attachments
-                  if (row.doc._attachments) {
-                    if (downDoc._attachments) {
-                      _.extend(downDoc._attachments, row.doc._attachments);
-                    }
-                    else {
-                      downDoc._attachments = row.doc._attachments;
-                    }
+      return $q.all(promises)
+        .then(function (jorgeDocsPerDbName) {
+          _.each(jorgeDocsPerDbName, function (jorgeDocs) {
+            if (jorgeDocs.total_rows > 0) {
+              // The the current write db has any documents, loop through
+              // them and see if any of the documents have a change_id that
+              // matches the current read-only db
+              _.each(jorgeDocs.rows, function (row) {
+                _.extend(downDoc, JSON.parse(row.doc.change));
+                // Handle attachments
+                if (row.doc._attachments) {
+                  if (downDoc._attachments) {
+                    _.extend(downDoc._attachments, row.doc._attachments);
+                  }
+                  else {
+                    downDoc._attachments = row.doc._attachments;
                   }
                 }
-              }
-            });
-          }
-          deferred.resolve(downDoc);
+              });
+            }
+          });
         });
-      });
-      return deferred.promise;
     }
 
     return function (db) {
@@ -150,6 +140,13 @@ module.exports = function (ngModule) {
         return deferred.promise;
       };
 
+      /*
+      * Used to query design/view secondary indexes
+      */
+      this.queryView = function(view, key) {
+        return getDB(this.db).query(view, key);
+      };
+
       this.getAll = function () {
         var self = this;
         var deferred = $q.defer();
@@ -164,6 +161,14 @@ module.exports = function (ngModule) {
           deferred.reject(err);
         });
         return deferred.promise;
+      };
+
+      /**
+      * Used to save design/view docs
+      * Update existing docs
+      */
+      this.putDoc = function (doc) {
+        return getDB(this.db).put(doc);
       };
 
       this.get = function (docId) {
