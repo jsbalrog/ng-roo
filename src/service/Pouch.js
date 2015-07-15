@@ -101,14 +101,14 @@ module.exports = function (ngModule) {
               // them and see if any of the documents have a change_id that
               // matches the current read-only db
               _.each(jorgeDocs.rows, function (row) {
-                _.extend(downDoc, JSON.parse(row.doc.change));
+                _.extend(downDoc, JSON.parse(row.value.change));
                 // Handle attachments
-                if (row.doc._attachments) {
+                if (row.value._attachments) {
                   if (downDoc._attachments) {
-                    _.extend(downDoc._attachments, row.doc._attachments);
+                    _.extend(downDoc._attachments, row.value._attachments);
                   }
                   else {
-                    downDoc._attachments = row.doc._attachments;
+                    downDoc._attachments = row.value._attachments;
                   }
                 }
               });
