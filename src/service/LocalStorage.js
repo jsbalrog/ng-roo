@@ -1,6 +1,6 @@
 module.exports = function(ngModule) {
 	'use strict';
-	ngModule.factory('LocalStorageService', function($window, $q) {
+	ngModule.factory('LocalStorageService', ["$window", "$q", function($window, $q) {
 
 		var lsKey = 'ng-roo';
 		var localStorage = $window.localStorage;
@@ -97,5 +97,5 @@ module.exports = function(ngModule) {
 			getItem: getItem,
 			removeItem: removeItem
 		};
-	});
+	}]);
 };

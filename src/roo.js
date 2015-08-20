@@ -3,22 +3,22 @@ var ngModule = angular.module('vs.ng-roo', ['ng']);
 require('./service')(ngModule);
 
 ngModule.provider('rooConfig', function() {
-	'use strict';
+  'use strict';
 
-	var self = this;
+  var self = this;
 
-	self.$options = {
-		destroyOnSync: true
-	};
+  self.$options = {
+    destroyOnSync: true
+  };
 
-	self.$dbOptions = {
-		auto_compaction: true,
-		adapter: 'idb'
-	};
+  self.$dbOptions = {
+    auto_compaction: true,
+    adapter: 'idb'
+  };
 
-	self.$dwnDbs = [];
-	self.$upDbs = [];
-	self.$replications = {};
+  self.$dwnDbs = [];
+  self.$upDbs = [];
+  self.$replications = {};
 
   this.$get = function() {
     return {
@@ -37,44 +37,44 @@ ngModule.provider('rooConfig', function() {
       getDbOptions: function(){
         return self.$dbOptions;
       },
-			getReplications: function(){
+      getReplications: function(){
         return self.$replications;
       },
-			clearReplications: function(){
-				for(var i in self.$replications){
-					self.$replications[i].cancel();
-				}
-				self.$replications = {};
-			}
-		};
-	};
+      clearReplications: function(){
+        for(var i in self.$replications){
+          self.$replications[i].cancel();
+        }
+        self.$replications = {};
+      }
+    };
+  };
 
-	self.dbs = function(dwnDbs, upDbs) {
-		if (dwnDbs && dwnDbs.length > 0) {
-			self.$dwnDbs = dwnDbs;
-		}
+  self.dbs = function(dwnDbs, upDbs) {
+    if (dwnDbs && dwnDbs.length > 0) {
+      self.$dwnDbs = dwnDbs;
+    }
 
-		if (upDbs && upDbs.length > 0) {
-			self.$upDbs = upDbs;
-		}
-	};
+    if (upDbs && upDbs.length > 0) {
+      self.$upDbs = upDbs;
+    }
+  };
 
-	self.couchConfig = function(couchConfig) {
-		if (couchConfig) {
-			self.$couchConfig = couchConfig;
-		}
-	};
+  self.couchConfig = function(couchConfig) {
+    if (couchConfig) {
+      self.$couchConfig = couchConfig;
+    }
+  };
 
-	self.options = function(options) {
-		if (options) {
-			self.$options = _.extend(self.$options, options);
-		}
-	};
+  self.options = function(options) {
+    if (options) {
+      self.$options = _.extend(self.$options, options);
+    }
+  };
 
-	self.dbOptions = function(options) {
-		if (options) {
-			self.$dbOptions = _.extend(self.$dbOptions, options);
-		}
-	};
+  self.dbOptions = function(options) {
+    if (options) {
+      self.$dbOptions = _.extend(self.$dbOptions, options);
+    }
+  };
 
 });

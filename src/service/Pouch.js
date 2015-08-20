@@ -2,7 +2,7 @@
 module.exports = function (ngModule) {
   'use strict';
 
-  ngModule.service('Pouch', function ($rootScope, $q, $http, rooConfig, LocalStorageService) {
+  ngModule.service('Pouch', ["$rootScope", "$q", "$http", "rooConfig", "LocalStorageService", function ($rootScope, $q, $http, rooConfig, LocalStorageService) {
 
     var dbCache = {};
 
@@ -23,54 +23,45 @@ module.exports = function (ngModule) {
      * so, for example, looks something like this:
      *"gemini_cushion_fist::WO-20150226-2949689"
      */
+
     function shimRecords(downDbName, downDocs) {
-      var promises   = [];
-      var deferred   = $q.defer();
-      var jorgeNames = rooConfig.getUpDbs();
-      // Loop through all of the write databases
-      _.each(jorgeNames, function (jorgeName) {
-        promises.push(getDB(jorgeName).query('filter/record_by_table_and_service_no', {startKey: [downDbName, 0], endKey: [downDbName, {}]}));
-      });
+      var db = getDB('gemini_cushion_requests'); //JORGE
+      return db.query('filter/record_by_table_and_service_no', {startKey: [downDbName, 0], endKey: [downDbName, {}]})
+        .then(function (views) {
+          var promises = [];
+          _.each(views.rows, function(viewDoc) {
+            promises.push(db.get(viewDoc.id, {attachments: true}));
+          });
+          return $q.all(promises);
+        })
+        .then(function (jorgeView) {
+          if (jorgeView.length > 0) {
+            _.each(downDocs.rows, function (doc) {
+              // If the current write db has any documents, loop through
+              // them and see if any of the documents have a change_id that
+              // matches the current read-only db
+              _.each(jorgeView, function (row) {
+                var rowIds = row.change_id.split('::');
+                if (rowIds[0] === downDbName) {
+                  // Find if any document matches
+                  if (doc.id === rowIds[1]) {
+                    _.extend(doc.doc, JSON.parse(row.change));
 
-      return $q.all(promises)
-        .then(function (jorgeDocsPerDbName) {
-          _.each(jorgeDocsPerDbName, function(jorgeDocs) {
-            if (jorgeDocs.total_rows > 0) {
-              _.each(downDocs.rows, function (doc) {
-                // If the current write db has any documents, loop through
-                // them and see if any of the documents have a change_id that
-                // matches the current read-only db
-                _.each(jorgeDocs.rows, function (row) {
-                  var d = $q.defer();
-                  var dbName = row.key[0];
-                  var id = row.key[1];
-                  if (dbName === downDbName) {
-                    // Find if any document matches
-                    if (doc.id === id) {
-                      _.extend(doc.doc, JSON.parse(row.value.change));
-
-                      // Handle attachments
-                      if (row.value._attachments) {
-                        if (doc._attachments) {
-                          _.extend(doc._attachments, row.value._attachments);
-                        }
-                        else {
-                          doc._attachments = row.value._attachments;
-                        }
+                    // Handle attachments
+                    if (row._attachments) {
+                      if (doc._attachments) {
+                        _.extend(doc._attachments, row._attachments);
+                      }
+                      else {
+                        doc._attachments = row._attachments;
                       }
                     }
                   }
-                  d.resolve(doc);
-                  promises.push(d.promise);
-                });
+                }
               });
-            }
-            $q.all(promises).then(function () {
-              deferred.resolve(downDocs);
             });
-          });
-
-          return deferred.promise;
+          }
+          return downDocs;
         });
     }
 
@@ -84,36 +75,35 @@ module.exports = function (ngModule) {
      * so, for example, looks something like this:
      * "gemini_cushion_fist::WO-20150226-2949689"
      */
+
     function shimRecord(downDbName, downDoc) {
-      var promises   = [];
-      var jorgeNames = rooConfig.getUpDbs(); //JORGE
-
-      // Loop through all of the write databases
-      _.each(jorgeNames, function (jorgeName) {
-        promises.push(getDB(jorgeName).query('filter/record_by_table_and_service_no', {key: [downDbName, downDoc._id]}));
-      });
-
-      return $q.all(promises)
-        .then(function (jorgeDocsPerDbName) {
-          _.each(jorgeDocsPerDbName, function (jorgeDocs) {
-            if (jorgeDocs.total_rows > 0) {
-              // The the current write db has any documents, loop through
-              // them and see if any of the documents have a change_id that
-              // matches the current read-only db
-              _.each(jorgeDocs.rows, function (row) {
-                _.extend(downDoc, JSON.parse(row.value.change));
-                // Handle attachments
-                if (row.value._attachments) {
-                  if (downDoc._attachments) {
-                    _.extend(downDoc._attachments, row.value._attachments);
-                  }
-                  else {
-                    downDoc._attachments = row.value._attachments;
-                  }
-                }
-              });
-            }
+      var db = getDB('gemini_cushion_requests'); //JORGE
+      return db.query('filter/record_by_table_and_service_no', {key: [downDbName, downDoc._id]})
+        .then(function (views) {
+          var promises = [];
+          _.each(views.rows, function(viewDoc) {
+            promises.push(db.get(viewDoc.id, {attachments: true}));
           });
+          return $q.all(promises);
+        })
+        .then(function (jorgeView) {
+          if (jorgeView.length > 0) {
+            // The the current write db has any documents, loop through
+            // them and see if any of the documents have a change_id that
+            // matches the current read-only db
+            _.each(jorgeView, function (doc) {
+              _.extend(downDoc, JSON.parse(doc.change));
+              // Handle attachments
+              if (doc._attachments) {
+                if (downDoc._attachments) {
+                  _.extend(downDoc._attachments, doc._attachments);
+                }
+                else {
+                  downDoc._attachments = doc._attachments;
+                }
+              }
+            });
+          }
           return downDoc;
         });
     }
@@ -213,6 +203,7 @@ module.exports = function (ngModule) {
         return deferred.promise;
       };
 
+
       this.putEntry = function (originTable, originId, changes, method, endpoint, data, headers, user, attachments, meta) {
         if (endpoint.indexOf('://') === -1) { // check to make sure it's a fully qualified URL
           endpoint = window.location.protocol + '//' + window.location.host + endpoint;
@@ -285,8 +276,8 @@ module.exports = function (ngModule) {
           .then(function(userAgent) {
             entry.userAgent = userAgent;
             if(!_.isEmpty(meta)){
-							entry.meta = meta;
-						}
+              entry.meta = meta;
+            }
             return db.put(entry);
           })
           .then(function() {
@@ -313,9 +304,10 @@ module.exports = function (ngModule) {
           });
         }
         else {
-          return db.info().then(function (info) {
-            return info.doc_count;
-          });
+          return db.query('filter/record_by_completion')
+            .then(function (docs) {
+              return docs.rows.length;
+            });
         }
       };
 
@@ -342,7 +334,7 @@ module.exports = function (ngModule) {
               };
               deferred.reject('Error: ' + errors[error.code]);
             },
-            {enableHighAccuracy: true, timeout: timeoutVal, maximumAge: 0});
+            {enableHighAccuracy: true, timeout: timeoutVal, maximumAge: 1000 * 60 * 5});
         }
         else {
           deferred.resolve(null);
@@ -384,32 +376,28 @@ module.exports = function (ngModule) {
         // Initialize the remote and local databases
         var token = 'Bearer ' + window.localStorage['auth-token'];
         var headers = { Authorization: token };
-        var remote = new PouchDB(
-          rooConfig.getCouchConfig().couchUrl + self.db,
-          {headers: headers}
-          );
+        var remote = new PouchDB(rooConfig.getCouchConfig().couchCushionUrl + self.db, { headers: headers });
         var local = getDB(self.db);
         console.log('Replicating ids', docIds);
         var replicationOptions = {
-          doc_ids : docIds,
-          batch_size: 5
+          doc_ids : docIds
         };
 
         // Perform replication
         var rep = local.replicate.from(remote, replicationOptions)
           .on('complete', function (result) {
-						$rootScope.$emit('ng-roo-replicate-ids-complete', result, self.db, docIds);
+            $rootScope.$emit('ng-roo-replicate-ids-complete', result, self.db, docIds);
             try {
             } catch (error) {
               console.log(error);
             }
           })
           .on('paused', function () {
-						$rootScope.$emit('ng-roo-replicate-ids-paused');
+            $rootScope.$emit('ng-roo-replicate-ids-paused');
             rep.cancel();
           })
           .on('denied', function (err) {
-						$rootScope.$emit('ng-roo-replicate-ids-denied', err);
+            $rootScope.$emit('ng-roo-replicate-ids-denied', err);
             rep.cancel();
           });
       };
@@ -442,9 +430,7 @@ module.exports = function (ngModule) {
         var headers = {
           Authorization: token
         };
-        var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + self.db, {
-          headers: headers
-        });
+        var remote = new PouchDB(rooConfig.getCouchConfig().couchCushionUrl + self.db, { headers: headers });
         var local = getDB(self.db);
         console.log('Replicating', self.db);
         var replicationOptions = _.extend({
@@ -458,7 +444,7 @@ module.exports = function (ngModule) {
         // Perform replication
         var rep = local.replicate.from(remote, replicationOptions)
           .on('complete', function (result) {
-						$rootScope.$emit('ng-roo-replicate-complete', result, self.db);
+            $rootScope.$emit('ng-roo-replicate-complete', result, self.db);
             try {
               // Make an entry in the logs
               LocalStorageService.addEntryToLog(user.employeeID, self.db, result);
@@ -467,11 +453,15 @@ module.exports = function (ngModule) {
             }
           })
           .on('paused', function () {
-						$rootScope.$emit('ng-roo-replicate-paused');
+            $rootScope.$emit('ng-roo-replicate-paused');
+            rep.cancel();
+          })
+          .on('error', function (err) {
+            $rootScope.$emit('ng-roo-replicate-error', err, self.db);
             rep.cancel();
           })
           .on('denied', function (err) {
-						$rootScope.$emit('ng-roo-replicate-denied', err);
+            $rootScope.$emit('ng-roo-replicate-denied', err);
             rep.cancel();
           });
         rooConfig.getReplications[self.db] = rep;
@@ -496,12 +486,11 @@ module.exports = function (ngModule) {
         var headers = {
           Authorization: token
         };
-        var remote = new PouchDB(rooConfig.getCouchConfig().couchUrl + self.db, {
-          ajax: {headers: headers, timeout: 60000}
-        });
-        var sync = PouchDB.sync(self.db, remote, syncOptions)
+        var remote = new PouchDB(rooConfig.getCouchConfig().couchJorgeUrl + self.db, { ajax: {headers: headers, timeout: 60000} });
+        var local = getDB(self.db);
+        var sync = local.replicate.to(remote, syncOptions)
           .on('complete', function (result) {
-						$rootScope.$emit('ng-roo-sync-complete', result, self.db);
+            $rootScope.$emit('ng-roo-sync-complete', result, self.db);
             try {
               // Make an entry in the logs
               LocalStorageService.addEntryToLog(user.employeeID, self.db, result);
@@ -510,32 +499,32 @@ module.exports = function (ngModule) {
             }
           })
           .on('change', function (info) {
-						$rootScope.$emit('ng-roo-sync-change', info);
+            $rootScope.$emit('ng-roo-sync-change', info, self.db);
           })
           .on('error', function (err) {
-						$rootScope.$emit('ng-roo-sync-error', err);
+            $rootScope.$emit('ng-roo-sync-error', err, self.db);
           })
           .on('active', function () {
-						$rootScope.$emit('ng-roo-sync-active');
+            $rootScope.$emit('ng-roo-sync-active', self.db);
           })
           .on('paused', function () {
-						$rootScope.$emit('ng-roo-sync-paused');
+            $rootScope.$emit('ng-roo-sync-paused', self.db);
           })
           .on('denied', function (err) {
-						$rootScope.$emit('ng-roo-sync-denied', err);
+            $rootScope.$emit('ng-roo-sync-denied', err, self.db);
           });
         rooConfig.getReplications[self.db] = sync;
       };
 
       this.update = function (updatedDoc) {
-				var self = this;
+        var self = this;
         var deferred = $q.defer();
         var cushiondb = getDB(self.db);
-				cushiondb.put(updatedDoc).then(function success(result) {
-					deferred.resolve(result);
-				}, function error(err) {
-					deferred.reject(err);
-				});
+        cushiondb.put(updatedDoc).then(function success(result) {
+          deferred.resolve(result);
+        }, function error(err) {
+          deferred.reject(err);
+        });
         return deferred.promise;
       };
 
@@ -562,5 +551,5 @@ module.exports = function (ngModule) {
       };
     };
 
-  });
+  }]);
 };
